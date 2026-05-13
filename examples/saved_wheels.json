@@ -1,0 +1,156 @@
+{
+  "version": 1,
+  "activeSlot": "movpa2irad32",
+  "wheels": [
+    {
+      "id": "movmsegpaudq",
+      "title": "🍿Monday Movie Night🍿",
+      "entrants": [
+        {
+          "name": "Six Fast & Angry Men",
+          "weight": 1
+        },
+        {
+          "name": "Horny Star Trek",
+          "weight": 1
+        },
+        {
+          "name": "Mormon Sparkle Vampire",
+          "weight": 1
+        },
+        {
+          "name": "Wes Anderson's Ennui",
+          "weight": 1
+        }
+      ],
+      "settings": {
+        "speedChance": 20,
+        "slowChance": 20,
+        "swapChance": 20,
+        "reverseChance": 20,
+        "explodeChance": 5,
+        "spinTime": 33
+      }
+    },
+    {
+      "id": "movpa2irad32",
+      "title": "⛳️Golf💩Shenanigans⛳️ ",
+      "entrants": [
+        {
+          "name": "I Love Sand",
+          "weight": 1
+        },
+        {
+          "name": "Everything Is Fine (No Adjustments)",
+          "weight": 1
+        },
+        {
+          "name": "Around The World",
+          "weight": 1
+        },
+        {
+          "name": "Super Saiyan (Must Use Special)",
+          "weight": 1
+        },
+        {
+          "name": "Oops All Wedges",
+          "weight": 1
+        },
+        {
+          "name": "Iron Man (Irons Only)",
+          "weight": 1
+        },
+        {
+          "name": "Socialism (Left Curve)",
+          "weight": 1
+        },
+        {
+          "name": "A Little Help From Your Friends",
+          "weight": 1
+        },
+        {
+          "name": "Pay It Backwards",
+          "weight": 1
+        },
+        {
+          "name": "Oops All Putters",
+          "weight": 1
+        },
+        {
+          "name": "Fascism (Right Curve)",
+          "weight": 1
+        },
+        {
+          "name": "Over The Top (Topspin)",
+          "weight": 1
+        },
+        {
+          "name": "That's Rough Man",
+          "weight": 1
+        },
+        {
+          "name": "Hitman 47 (Collect A Coin)",
+          "weight": 1
+        },
+        {
+          "name": "Eyes Wide Shut",
+          "weight": 1
+        },
+        {
+          "name": "Oops All Drivers",
+          "weight": 1
+        }
+      ],
+      "settings": {
+        "speedChance": 20,
+        "slowChance": 20,
+        "swapChance": 20,
+        "reverseChance": 20,
+        "explodeChance": 5,
+        "spinTime": 33
+      }
+    },
+    {
+      "id": "moyl94ijjrfj",
+      "title": "🍿Chloe's Bonus Movie Night🍿",
+      "entrants": [
+        {
+          "name": "Raiders of the Arc",
+          "weight": 1
+        },
+        {
+          "name": "Over the Hedge",
+          "weight": 1
+        },
+        {
+          "name": "Kung-Pow: Enter the Fist",
+          "weight": 1
+        },
+        {
+          "name": "Titanic",
+          "weight": 1
+        },
+        {
+          "name": "Godzilla",
+          "weight": 1
+        },
+        {
+          "name": "Madagascar",
+          "weight": 1
+        },
+        {
+          "name": "Stardust",
+          "weight": 1
+        }
+      ],
+      "settings": {
+        "speedChance": 20,
+        "slowChance": 20,
+        "swapChance": 20,
+        "reverseChance": 20,
+        "explodeChance": 5,
+        "spinTime": 33
+      }
+    }
+  ]
+}
