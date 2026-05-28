@@ -17,8 +17,10 @@ const SLOT_KEY        = s => `basca_slot_${s}`;
 const SETTINGS_DEFAULTS = {
   speedChance: 20, slowChance: 20, swapChance: 20,
   reverseChance: 20, explodeChance: 5, spinTime: 33,
+  keepWinnersLog: false,
   hidePercentages: false, idleTicks: false,
-  autoIncrementLosers: false, autoDecrementWinner: false, autoRemoveWinner: false,
+  autoIncrementLosers: false,
+  autoRemoveWinner: false, autoDecrementWinner: false, setWinnerToOne: false,
   customImages: {}, customSounds: {},
 };
 

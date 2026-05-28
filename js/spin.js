@@ -458,6 +458,9 @@ function spinWheel() {
     } else if (settings.autoDecrementWinner && entrants[winnerIdx]?.weight > 1) {
       entrants[winnerIdx].weight--;
       autoChanged = true;
+    } else if (settings.setWinnerToOne && entrants[winnerIdx]?.weight !== 1) {
+      entrants[winnerIdx].weight = 1;
+      autoChanged = true;
     }
 
     if (autoChanged) { saveEntrants(); renderEntrants(); updateStats(); }

@@ -108,5 +108,6 @@ let confettiBurstId = null;
 let sidebarVisible = true;
 
 // ── Winner history state ──────────────────────────────────────
-// Session-only — deliberately not persisted, wiped on page reload.
-const winnerHistory = [];
+// Per-slot. Persisted when keepWinnersLog is enabled; session-only otherwise.
+// Must be `let` so activateSlot() can replace it when switching slots.
+let winnerHistory = [];

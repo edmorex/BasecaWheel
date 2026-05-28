@@ -385,6 +385,7 @@ settingsOverlay.addEventListener("click", e => {
 // PITFALL — SETTINGS_DEFAULTS includes customImages, customSounds, and the
 // boolean feature flags. Guard against null.addEventListener() for the
 // object-valued keys, and read .checked (not .value) for checkboxes.
+const WINNER_ACTION_KEYS = ["autoRemoveWinner", "autoDecrementWinner", "setWinnerToOne"];
 Object.keys(SETTINGS_DEFAULTS).forEach(k => {
   if (k === "customImages" || k === "customSounds") return;
   const el = document.getElementById(k);
@@ -392,6 +393,16 @@ Object.keys(SETTINGS_DEFAULTS).forEach(k => {
     settings[k] = el.type === "checkbox"
       ? el.checked
       : Math.max(0, parseInt(el.value) || 0);
+    // The three winner-action flags are mutually exclusive: turning one on
+    // automatically turns the other two off.
+    if (WINNER_ACTION_KEYS.includes(k) && el.checked) {
+      WINNER_ACTION_KEYS.forEach(other => {
+        if (other !== k) {
+          settings[other] = false;
+          document.getElementById(other).checked = false;
+        }
+      });
+    }
     saveCurrentSlot();
   });
 });
@@ -604,7 +615,8 @@ function exportAllData() {
       const raw = localStorage.getItem(SLOT_KEY(w.id));
       if (raw) slot = JSON.parse(raw);
     } catch {}
-    return { id: w.id, title: w.title, entrants: slot.entrants, settings: slot.settings };
+    return { id: w.id, title: w.title, entrants: slot.entrants, settings: slot.settings,
+             history: Array.isArray(slot.history) ? slot.history : [] };
   });
   return { version: 1, activeSlot, wheels };
 }
@@ -635,6 +647,7 @@ function importAllData(payload) {
         customImages: { ...(w.settings?.customImages ?? {}) },
         customSounds: { ...(w.settings?.customSounds ?? {}) },
       },
+      history: Array.isArray(w.history) ? w.history : [],
     };
     localStorage.setItem(SLOT_KEY(w.id), JSON.stringify(slot));
   });
@@ -813,7 +826,11 @@ function renderHistory() {
 }
 
 function addToHistory(name) {
-  winnerHistory.push(name);
+  const entry = settings.keepWinnersLog
+    ? `${new Date().toLocaleDateString("sv")} ${name}` // "sv" locale gives YYYY-MM-DD
+    : name;
+  winnerHistory.push(entry);
+  if (settings.keepWinnersLog) saveCurrentSlot();
   renderHistory();
 }
 

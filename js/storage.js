@@ -4,7 +4,8 @@
 // LOAD ORDER: must come after constants.js and state.js.
 // Reads: ACTIVE_SLOT_KEY, WHEEL_LIST_KEY, SLOT_KEY, SETTINGS_DEFAULTS,
 //        DEFAULT_ENTRANTS (constants.js)
-// Mutates: wheelList, activeSlot, entrants, settings, slotTitle (state.js)
+// Mutates: wheelList, activeSlot, entrants, settings, slotTitle,
+//          winnerHistory (state.js)
 //          — but only inside activateSlot(), which is called from ui.js/boot.js.
 
 function newSlotId() {
@@ -20,6 +21,7 @@ function defaultSlotData() {
     title:    "",
     entrants: JSON.parse(JSON.stringify(DEFAULT_ENTRANTS)),
     settings: { ...SETTINGS_DEFAULTS },
+    history:  [],
   };
 }
 
@@ -42,6 +44,7 @@ function loadSlotData(slot) {
         customImages: { ...(d.settings?.customImages ?? {}) },
         customSounds: { ...(d.settings?.customSounds ?? {}) },
       },
+      history: Array.isArray(d.history) ? d.history : [],
     };
   } catch { return defaultSlotData(); }
 }
@@ -52,6 +55,9 @@ function saveCurrentSlot() {
     title:    slotTitle,
     entrants: entrants,
     settings: settings,
+    // Only persist history when the feature is enabled; otherwise save an
+    // empty array so toggling the flag off clears it on next load.
+    history:  settings.keepWinnersLog ? winnerHistory : [],
   }));
 }
 
@@ -70,9 +76,10 @@ function activateSlot(slotId) {
   localStorage.setItem(ACTIVE_SLOT_KEY, slotId);
 
   const data = loadSlotData(slotId);
-  slotTitle  = data.title;
-  entrants   = data.entrants;
-  settings   = data.settings;
+  slotTitle     = data.title;
+  entrants      = data.entrants;
+  settings      = data.settings;
+  winnerHistory = data.history; // per-slot; [] when keepWinnersLog is off
 
   // emoji.js — seeds customImages defaults and rebuilds EMOJI_VARIANTS
   initCustomImagesFromProbed();
@@ -88,4 +95,5 @@ function activateSlot(slotId) {
   updateStats();
   resetWheelState();
   renderWheelList();
+  renderHistory(); // refresh history panel with the newly loaded slot's log
 }
