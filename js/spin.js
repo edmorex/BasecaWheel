@@ -441,6 +441,26 @@ function spinWheel() {
     playSound("fanfare");
     startConfettiBursts();
     addToHistory(winner.name);
+
+    // ── Auto-features ─────────────────────────────────────────
+    // Apply weight/presence changes while the winner overlay is visible so
+    // the sidebar reflects the new state for the next spin. renderEntrants()
+    // and updateStats() are defined in ui.js (safe — called at runtime).
+    const winnerIdx = getSliceIndexAt(currentRotation);
+    let autoChanged = false;
+
+    if (settings.autoIncrementLosers) {
+      entrants.forEach((e, i) => { if (i !== winnerIdx) { e.weight++; autoChanged = true; } });
+    }
+    if (settings.autoRemoveWinner) {
+      entrants.splice(winnerIdx, 1);
+      autoChanged = true;
+    } else if (settings.autoDecrementWinner && entrants[winnerIdx]?.weight > 1) {
+      entrants[winnerIdx].weight--;
+      autoChanged = true;
+    }
+
+    if (autoChanged) { saveEntrants(); renderEntrants(); updateStats(); }
   }
 
   requestAnimationFrame(cwAnimate);

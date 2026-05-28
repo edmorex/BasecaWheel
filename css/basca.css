@@ -101,19 +101,25 @@ h3 { margin-top: 0; margin-bottom: 6px; font-size: 14px; opacity: 0.75; text-tra
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding-right: 4px;
   scroll-behavior: smooth;
+  /* Reserve scrollbar gutter permanently so content width never shifts
+     when the bar appears. padding-right is no longer needed. */
+  scrollbar-gutter: stable;
 }
 
 .wheel-row {
   display: grid;
-  grid-template-columns: 18px 1fr 30px;
+  grid-template-columns: 20px 1fr 30px;
   gap: 6px;
   align-items: center;
   background: rgba(255,255,255,0.05);
   border-radius: 10px;
   padding: 4px 8px;
   border: 1px solid transparent;
+  cursor: pointer;
+  /* Reserve border-top/bottom space so drag indicators don't shift layout */
+  border-top: 2px solid transparent;
+  border-bottom: 2px solid transparent;
 }
 
 .wheel-row.active-wheel {
@@ -121,17 +127,21 @@ h3 { margin-top: 0; margin-bottom: 6px; font-size: 14px; opacity: 0.75; text-tra
   border-color: rgba(251,191,36,0.3);
 }
 
-.wheel-row input[type="radio"] {
-  width: 16px !important;
-  height: 16px !important;
-  padding: 0 !important;
-  background: transparent !important;
-  border-radius: 0 !important;
-  cursor: pointer;
-  accent-color: var(--gold);
-  margin: 0;
-  flex-shrink: 0;
+.wheel-row.dragging { opacity: 0.35; }
+.wheel-row.drag-over-top    { border-top:    2px solid rgba(251,191,36,0.8); }
+.wheel-row.drag-over-bottom { border-bottom: 2px solid rgba(251,191,36,0.8); }
+
+.wheel-drag-handle {
+  cursor: grab;
+  opacity: 0.35;
+  font-size: 15px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
 }
+.wheel-drag-handle:hover { opacity: 0.75; }
 
 .wheel-title-edit {
   background: transparent !important;
@@ -213,8 +223,8 @@ button:hover { transform: translateY(-1px); }
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding-right: 6px;
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
 }
 
 .scroll-fade {
@@ -843,7 +853,22 @@ canvas {
 }
 .settings-panel label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
 .settings-panel input { background: #1e293b; }
-.settings-panel input[type="range"] { padding: 0; background: transparent; }
+.settings-panel input[type="range"]    { padding: 0; background: transparent; }
+/* Feature toggles: checkbox + text on one line */
+.settings-panel label.feature-label {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+.settings-panel label.feature-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--accent);
+  background: transparent;
+}
 
 .settings-panel-footer {
   display: flex;
@@ -920,6 +945,7 @@ canvas {
 }
 .img-url-input:focus { outline: none; border-color: var(--accent); }
 .img-add-btn { font-size: 12px; padding: 4px 6px; }
+.settings-left-col  { display: flex; flex-direction: column; gap: 16px; }
 .settings-right-col { display: flex; flex-direction: column; gap: 16px; }
 .snd-row {
   display: grid;

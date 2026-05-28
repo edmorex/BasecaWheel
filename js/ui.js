@@ -37,22 +37,103 @@
 const settingsOverlay = document.getElementById("settingsOverlay");
 
 // ── Wheel list ────────────────────────────────────────────────
+// dragSrcIdx  — list index of the row being dragged; null when idle.
+// dragLastY   — last cursor Y (viewport px) seen during any dragover.
+// dragScrollId— rAF handle for the auto-scroll loop; null when stopped.
+let dragSrcIdx   = null;
+let dragLastY    = 0;
+let dragScrollId = null;
+
+// Track cursor position globally so the scroll loop can read it even when
+// the pointer moves faster than dragover events fire on individual rows.
+// passive:true avoids blocking the browser's own scroll handling.
+document.addEventListener("dragover", e => { dragLastY = e.clientY; }, { passive: true });
+
+function startDragScroll() {
+  const ZONE  = 36; // px from container edge that triggers scrolling
+  const SPEED = 10; // max px scrolled per frame (scales with proximity)
+  function loop() {
+    if (dragSrcIdx === null) { dragScrollId = null; return; }
+    const rect = wheelListEl.getBoundingClientRect();
+    const relY = dragLastY - rect.top;
+    if (relY < ZONE) {
+      // Near the top edge — scroll up, faster the closer to the edge.
+      wheelListEl.scrollTop -= Math.ceil(SPEED * (1 - relY / ZONE));
+    } else if (relY > rect.height - ZONE) {
+      // Near the bottom edge — scroll down.
+      wheelListEl.scrollTop += Math.ceil(SPEED * (1 - (rect.height - relY) / ZONE));
+    }
+    dragScrollId = requestAnimationFrame(loop);
+  }
+  if (dragScrollId === null) dragScrollId = requestAnimationFrame(loop);
+}
+
+function stopDragScroll() {
+  if (dragScrollId !== null) { cancelAnimationFrame(dragScrollId); dragScrollId = null; }
+}
+
 function renderWheelList() {
   wheelListEl.innerHTML = "";
-  wheelList.forEach(wheel => {
+  wheelList.forEach((wheel, idx) => {
     const row = document.createElement("div");
     row.className = "wheel-row" + (wheel.id === activeSlot ? " active-wheel" : "");
+    row.draggable = true;
 
-    const radio    = document.createElement("input");
-    radio.type     = "radio";
-    radio.name     = "activeWheel";
-    radio.checked  = wheel.id === activeSlot;
-    radio.onchange = () => {
-      if (spinning) return;
-      saveCurrentSlot();
-      activateSlot(wheel.id);
-    };
+    // ── Drag-and-drop ────────────────────────────────────────
+    row.addEventListener("dragstart", e => {
+      dragSrcIdx = idx;
+      e.dataTransfer.effectAllowed = "move";
+      // Defer adding .dragging so the browser can snapshot the un-faded row
+      // as the drag ghost image before the style change takes effect.
+      setTimeout(() => row.classList.add("dragging"), 0);
+      startDragScroll();
+    });
 
+    row.addEventListener("dragend", () => {
+      dragSrcIdx = null;
+      stopDragScroll();
+      row.classList.remove("dragging");
+      wheelListEl.querySelectorAll(".wheel-row").forEach(r =>
+        r.classList.remove("drag-over-top", "drag-over-bottom")
+      );
+    });
+
+    row.addEventListener("dragover", e => {
+      e.preventDefault();
+      if (dragSrcIdx === null || dragSrcIdx === idx) return;
+      const mid   = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
+      const isTop = e.clientY < mid;
+      wheelListEl.querySelectorAll(".wheel-row").forEach(r =>
+        r.classList.remove("drag-over-top", "drag-over-bottom")
+      );
+      row.classList.add(isTop ? "drag-over-top" : "drag-over-bottom");
+    });
+
+    row.addEventListener("dragleave", () => {
+      row.classList.remove("drag-over-top", "drag-over-bottom");
+    });
+
+    row.addEventListener("drop", e => {
+      e.preventDefault();
+      stopDragScroll();
+      if (dragSrcIdx === null || dragSrcIdx === idx) return;
+      const mid    = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
+      const isTop  = e.clientY < mid;
+      let target   = isTop ? idx : idx + 1;
+      if (dragSrcIdx < target) target--; // account for the spliced-out element
+      const [moved] = wheelList.splice(dragSrcIdx, 1);
+      wheelList.splice(target, 0, moved);
+      dragSrcIdx = null;
+      saveWheelList();
+      renderWheelList();
+    });
+
+    // ── Drag handle ──────────────────────────────────────────
+    const handle = document.createElement("span");
+    handle.className   = "wheel-drag-handle";
+    handle.textContent = "⠿";
+
+    // ── Title input ──────────────────────────────────────────
     const titleInput       = document.createElement("input");
     titleInput.type           = "text";
     titleInput.name           = "bw-wheel-title-row";
@@ -82,12 +163,24 @@ function renderWheelList() {
       }
     };
 
+    // ── Delete button ─────────────────────────────────────────
     const deleteBtn       = document.createElement("button");
     deleteBtn.className   = "remove-btn";
     deleteBtn.textContent = "✕";
-    deleteBtn.onclick     = () => deleteWheel(wheel.id);
+    deleteBtn.onclick     = e => { e.stopPropagation(); deleteWheel(wheel.id); };
 
-    row.appendChild(radio);
+    // ── Row click activates wheel ─────────────────────────────
+    // Clicks on the title input or delete button are handled by those
+    // elements directly; clicks everywhere else (handle, padding) switch
+    // the active wheel.
+    row.addEventListener("click", e => {
+      if (e.target === titleInput || e.target === deleteBtn) return;
+      if (spinning) return;
+      saveCurrentSlot();
+      activateSlot(wheel.id);
+    });
+
+    row.appendChild(handle);
     row.appendChild(titleInput);
     row.appendChild(deleteBtn);
     wheelListEl.appendChild(row);
@@ -257,7 +350,9 @@ function dismissWinner() {
 function applySettingsToInputs() {
   Object.keys(SETTINGS_DEFAULTS).forEach(k => {
     if (k === "customImages" || k === "customSounds") return;
-    document.getElementById(k).value = settings[k];
+    const el = document.getElementById(k);
+    if (el.type === "checkbox") el.checked = !!settings[k];
+    else                        el.value   = settings[k];
   });
   renderSoundSettings();
   renderImageSettings();
@@ -287,19 +382,25 @@ settingsOverlay.addEventListener("click", e => {
   if (e.target === settingsOverlay) settingsOverlay.classList.add("hidden");
 });
 
-// PITFALL — SETTINGS_DEFAULTS includes customImages and customSounds, which
-// have no matching <input> elements. Guard against null.addEventListener().
+// PITFALL — SETTINGS_DEFAULTS includes customImages, customSounds, and the
+// boolean feature flags. Guard against null.addEventListener() for the
+// object-valued keys, and read .checked (not .value) for checkboxes.
 Object.keys(SETTINGS_DEFAULTS).forEach(k => {
   if (k === "customImages" || k === "customSounds") return;
-  document.getElementById(k).addEventListener("input", () => {
-    settings[k] = Math.max(0, parseInt(document.getElementById(k).value) || 0);
+  const el = document.getElementById(k);
+  el.addEventListener("input", () => {
+    settings[k] = el.type === "checkbox"
+      ? el.checked
+      : Math.max(0, parseInt(el.value) || 0);
     saveCurrentSlot();
   });
 });
 
+// "Restore Weights" resets only the Chances sliders, leaving feature flags
+// and custom images/sounds untouched.
 document.getElementById("defaultsBtn").onclick = () => {
-  const { customImages } = settings;
-  settings = { ...SETTINGS_DEFAULTS, customImages };
+  ["speedChance","slowChance","swapChance","reverseChance","explodeChance","spinTime"]
+    .forEach(k => { settings[k] = SETTINGS_DEFAULTS[k]; });
   applySettingsToInputs();
   saveCurrentSlot();
 };
@@ -575,31 +676,7 @@ rawDataOverlay.addEventListener("click", e => {
   if (e.target === rawDataOverlay) closeRawData();
 });
 
-document.getElementById("rawDataSaveBtn").onclick = () => {
-  const blob  = new Blob([rawDataText.value], { type: "application/json" });
-  const url   = URL.createObjectURL(blob);
-  const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-  const a     = document.createElement("a");
-  a.href      = url;
-  a.download  = `bascawheel-${stamp}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-};
-
-document.getElementById("rawDataLoadBtn").onclick = () => rawDataFileInput.click();
-rawDataFileInput.onchange = async () => {
-  const file = rawDataFileInput.files[0];
-  if (!file) return;
-  try {
-    rawDataText.value        = await file.text();
-    rawDataError.textContent = "";
-  } catch (e) {
-    rawDataError.textContent = "Could not read file: " + e.message;
-  }
-  rawDataFileInput.value = ""; // reset so re-selecting the same file fires change
-};
+// rawDataSaveBtn and rawDataLoadBtn removed — file save/load moved to wheel section buttons.
 
 // ── Control wiring ────────────────────────────────────────────
 document.getElementById("addBtn").onclick = addEntrant;
@@ -652,18 +729,50 @@ document.getElementById("nameInput").addEventListener("keydown", e => {
   if (e.key === "Enter") addEntrant();
 });
 
-document.getElementById("addWheelBtn").onclick = () => {
-  const input = document.getElementById("wheelNameInput");
-  addWheel(input.value);
-  input.value = "";
+document.getElementById("addWheelBtn").onclick = () => addWheel("");
+
+document.getElementById("saveWheelsBtn").onclick = () => {
+  const blob  = new Blob([JSON.stringify(exportAllData(), null, 2)], { type: "application/json" });
+  const url   = URL.createObjectURL(blob);
+  const d     = new Date();
+  const pad   = n => String(n).padStart(2, "0");
+  const stamp = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
+  const a     = document.createElement("a");
+  a.href      = url;
+  a.download  = `bascawheel-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 
-document.getElementById("wheelNameInput").addEventListener("keydown", e => {
-  if (e.key === "Enter") {
-    addWheel(e.target.value);
-    e.target.value = "";
+document.getElementById("loadWheelsBtn").onclick = () => rawDataFileInput.click();
+rawDataFileInput.onchange = async () => {
+  const file = rawDataFileInput.files[0];
+  if (!file) return;
+  let text;
+  try {
+    text = await file.text();
+  } catch (e) {
+    alert("Could not read file: " + e.message);
+    rawDataFileInput.value = "";
+    return;
   }
-});
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch (e) {
+    alert("Invalid JSON: " + e.message);
+    rawDataFileInput.value = "";
+    return;
+  }
+  try {
+    importAllData(parsed);
+  } catch (e) {
+    alert("Import failed: " + e.message);
+  }
+  rawDataFileInput.value = ""; // reset so re-selecting the same file fires change
+};
 
 // ── Sidebar toggle ────────────────────────────────────────────
 panelToggle.onclick = () => {

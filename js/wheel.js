@@ -202,7 +202,9 @@ function drawWheel(rotation = currentRotation) {
     ctx.textAlign = "right";
     const label   = nobodyWinsActive
       ? "Nobody"
-      : `${e.name} (${(e.weight / total * 100).toFixed(1)}%)`;
+      : settings.hidePercentages
+        ? e.name
+        : `${e.name} (${(e.weight / total * 100).toFixed(1)}%)`;
     ctx.fillText(label, wheelRadius - 20, 8);
     ctx.restore();
 

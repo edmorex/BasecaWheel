@@ -20,9 +20,10 @@
     <!-- ── Wheel list ── -->
     <div class="wheel-list-section">
       <h3>Wheels</h3>
-      <div class="wheel-add-row">
-        <input id="wheelNameInput" placeholder="New wheel title…" name="bw-wheel-title" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-autocomplete="none" readonly onfocus="this.removeAttribute('readonly')" />
-        <button class="primary" id="addWheelBtn">Add</button>
+      <div class="wheel-clear-row">
+        <button class="bulk-btn" id="saveWheelsBtn">Save</button>
+        <button class="bulk-btn" id="loadWheelsBtn">Load</button>
+        <button class="primary bulk-btn" id="addWheelBtn">New</button>
       </div>
       <div class="wheel-clear-row">
         <button class="bulk-btn" id="randomizeBtn">Randomize</button>
@@ -117,12 +118,10 @@
 <div class="modal-overlay" id="rawDataOverlay">
   <div class="raw-data-box">
     <h3 class="raw-data-title">📦 Raw Data</h3>
-    <p class="raw-data-hint">All wheels, entrants, and settings as JSON. Edit, paste, or load from a file. Clicking "Save &amp; Close" imports any changes.</p>
+    <p class="raw-data-hint">All wheels, entrants, and settings as JSON. Edit or paste directly. Clicking "Save &amp; Close" imports any changes.</p>
     <textarea id="rawDataText" spellcheck="false"></textarea>
     <div class="raw-data-error" id="rawDataError"></div>
     <div class="raw-data-actions">
-      <button id="rawDataLoadBtn">📂 Load from File…</button>
-      <button id="rawDataSaveBtn">💾 Save to File</button>
       <button id="rawDataCancel">Cancel</button>
       <button id="rawDataApply" class="primary">Save &amp; Close</button>
     </div>
@@ -140,15 +139,24 @@
     <div class="settings-body-wrap">
       <div class="scroll-fade top"    id="settingsTopFade">   <div class="scroll-indicator">▲</div></div>
       <div class="settings-panel-body" id="settingsPanelBody">
-        <section class="settings-section">
-          <div class="settings-section-title">Chances</div>
-          <label>⏱️ Spin Time      <input type="range"  id="spinTime"      min="0" max="100" step="1" /></label>
-          <label>💥 Explode %      <input type="number" id="explodeChance" min="0" max="100" step="1" /></label>
-          <label>🔄 Reverse Spin % <input type="number" id="reverseChance" min="0" max="100" step="1" /></label>
-          <label>🫣 Slowdown %     <input type="number" id="slowChance"    min="0" max="100" step="1" /></label>
-          <label>😜 Boost %        <input type="number" id="speedChance"   min="0" max="100" step="1" /></label>
-          <label>🌀 Late Shuffle % <input type="number" id="swapChance"    min="0" max="100" step="1" /></label>
-        </section>
+        <div class="settings-left-col">
+          <section class="settings-section">
+            <div class="settings-section-title">Chances</div>
+            <label>⏱️ Spin Time      <input type="range"  id="spinTime"      min="0" max="100" step="1" /></label>
+            <label>💥 Explode %      <input type="number" id="explodeChance" min="0" max="100" step="1" /></label>
+            <label>🔄 Reverse Spin % <input type="number" id="reverseChance" min="0" max="100" step="1" /></label>
+            <label>🫣 Slowdown %     <input type="number" id="slowChance"    min="0" max="100" step="1" /></label>
+            <label>😜 Boost %        <input type="number" id="speedChance"   min="0" max="100" step="1" /></label>
+            <label>🌀 Late Shuffle % <input type="number" id="swapChance"    min="0" max="100" step="1" /></label>
+          </section>
+          <section class="settings-section">
+            <div class="settings-section-title">Features</div>
+            <label class="feature-label"><input type="checkbox" id="hidePercentages"      /> Hide Percentages</label>
+            <label class="feature-label"><input type="checkbox" id="autoIncrementLosers" /> Auto Increment Losers</label>
+            <label class="feature-label"><input type="checkbox" id="autoDecrementWinner" /> Auto Decrement Winner</label>
+            <label class="feature-label"><input type="checkbox" id="autoRemoveWinner"    /> Auto Remove Winner</label>
+          </section>
+        </div>
         <div class="settings-right-col">
           <section class="settings-section">
             <div class="settings-section-title">🔊 Wheel Sounds</div>

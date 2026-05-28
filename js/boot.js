@@ -52,6 +52,13 @@
   activateSlot(valid ? valid.id : wheelList[0].id);
 })();
 
+// Scroll the active wheel row into view. Deferred one frame so the list
+// has been laid out and offsetTop is accurate.
+requestAnimationFrame(() => {
+  const activeRow = wheelListEl.querySelector(".active-wheel");
+  if (activeRow) activeRow.scrollIntoView({ block: "nearest" });
+});
+
 resizeCanvas();
 
 // ── Image pre-caching ─────────────────────────────────────────
