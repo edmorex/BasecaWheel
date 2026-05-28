@@ -72,11 +72,44 @@ h3 { margin-top: 0; margin-bottom: 6px; font-size: 14px; opacity: 0.75; text-tra
 }
 
 /* ── Wheel list ── */
-.wheel-list-section {
-  margin-bottom: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+.wheel-list-section { margin-bottom: 0; }
+
+/* ── Section divider (wheels ↔ entrants) ── */
+.section-divider {
+  flex-shrink: 0;
+  height: 13px;
+  cursor: ns-resize;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
+/* Left and right line segments flanking the grip glyph */
+.section-divider::before,
+.section-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+  transition: background 0.15s;
+}
+/* Grip glyph — always visible, brightens on hover/drag */
+.section-divider span {
+  font-size: 12px;
+  color: rgba(255,255,255,0.25);
+  flex-shrink: 0;
+  line-height: 1;
+  user-select: none;
+  transition: color 0.15s;
+}
+.section-divider:hover::before,
+.section-divider:hover::after,
+body.resizing-v .section-divider::before,
+body.resizing-v .section-divider::after { background: rgba(255,255,255,0.4); }
+.section-divider:hover span,
+body.resizing-v .section-divider span   { color: rgba(255,255,255,0.75); }
+/* Keep the resize cursor everywhere while a drag is in progress */
+body.resizing-v,
+body.resizing-v * { cursor: ns-resize !important; user-select: none !important; }
 
 .wheel-add-row {
   display: grid;

@@ -834,3 +834,62 @@ muteBtn.onclick = () => {
     initAudio().then(startBg);
   }
 };
+
+// ── Section divider (wheels ↔ entrants) ──────────────────────
+// Persists the wheel-list height in localStorage so the split is
+// remembered across page reloads.
+const DIVIDER_KEY = "basca_divider_h";
+const DIVIDER_MIN = 42; // px — room for at least one row
+
+function applyDividerHeight(h) {
+  wheelListEl.style.height = h + "px";
+}
+
+// Restore saved height (falls back to 110 — the CSS default).
+applyDividerHeight(parseInt(localStorage.getItem(DIVIDER_KEY)) || 110);
+
+(function initDivider() {
+  const divider = document.getElementById("sectionDivider");
+  let startY  = 0;
+  let startH  = 0;
+  let maxDragH = 500; // computed fresh each mousedown/touchstart
+
+  function onMove(e) {
+    const y    = e.touches ? e.touches[0].clientY : e.clientY;
+    const newH = Math.min(maxDragH, Math.max(DIVIDER_MIN, startH + (y - startY)));
+    applyDividerHeight(newH);
+  }
+
+  function onUp() {
+    document.removeEventListener("mousemove", onMove);
+    document.removeEventListener("mouseup",   onUp);
+    document.removeEventListener("touchmove", onMove);
+    document.removeEventListener("touchend",  onUp);
+    document.body.classList.remove("resizing-v");
+    localStorage.setItem(DIVIDER_KEY, parseInt(wheelListEl.style.height));
+    updateWheelScrollFades();
+    updateScrollFades();
+  }
+
+  function onDown(clientY) {
+    startY = clientY;
+    startH = parseInt(wheelListEl.style.height) || 110;
+
+    // Max = current wheel-list height + however much the entrant-section can
+    // give up before it can no longer show a single entrant row (~44px + padding).
+    // Measured once here so the ceiling stays stable for the whole drag gesture.
+    const entrantSection = sidebarWrapper.querySelector(".entrant-section");
+    const headroom = entrantSection ? Math.max(0, entrantSection.clientHeight - 50) : 0;
+    maxDragH = startH + headroom;
+
+    document.body.classList.add("resizing-v");
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup",   onUp);
+    document.addEventListener("touchmove", onMove, { passive: false });
+    document.addEventListener("touchend",  onUp);
+  }
+
+  divider.addEventListener("mousedown",  e => { e.preventDefault(); onDown(e.clientY); });
+  divider.addEventListener("touchstart", e => { e.preventDefault(); onDown(e.touches[0].clientY); },
+    { passive: false });
+})();
