@@ -73,6 +73,7 @@ function startIdleRotation() {
     currentRotation = (currentRotation + IDLE_RPS * Math.PI * 2 * (dt / 1000)) % (Math.PI * 2);
     drawWheel(currentRotation);
     updateFlameSpeed(currentRotation, now);
+    if (settings.idleTicks) updatePointerTick(currentRotation);
     idleRafId = requestAnimationFrame(tick);
   }
   idleRafId = requestAnimationFrame(tick);
