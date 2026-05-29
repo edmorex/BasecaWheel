@@ -21,14 +21,11 @@
     <div class="wheel-list-section">
       <h3>Wheels</h3>
       <div class="wheel-clear-row">
-        <button class="bulk-btn" id="saveWheelsBtn">Save</button>
-        <button class="bulk-btn" id="loadWheelsBtn">Load</button>
-        <button class="primary bulk-btn" id="addWheelBtn">New</button>
-      </div>
-      <div class="wheel-clear-row">
-        <button class="bulk-btn" id="randomizeBtn">Randomize</button>
-        <button class="bulk-btn" id="cloneActiveWheelBtn">Clone</button>
-        <button class="danger clear-right-btn" id="clearWheelsBtn">Clear All</button>
+        <button class="bulk-btn"        id="loadWheelsBtn"      title="Load wheels from a JSON file">📂</button>
+        <button class="bulk-btn"        id="saveWheelsBtn"      title="Save all wheels to a JSON file">💾</button>
+        <button class="bulk-btn"        id="cloneActiveWheelBtn" title="Clone the active wheel">🪞</button>
+        <button class="bulk-btn"        id="clearHistoryBtn"    title="Wipe the winner history for this wheel">🧻</button>
+        <button class="bulk-btn danger" id="clearWheelsBtn"     title="Delete all wheels and start fresh">🗑️</button>
       </div>
       <div class="wheel-scroll-wrap">
         <div class="scroll-fade top"    id="wheelTopFade">   <div class="scroll-indicator">▲</div></div>
@@ -40,19 +37,19 @@
     <div id="sectionDivider" class="section-divider"><span>⠿</span></div>
 
     <h3>Entrants</h3>
-    <div class="input-row">
-      <input id="nameInput" placeholder="Entrant or Entrant,#" name="bw-entrant-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-autocomplete="none" readonly onfocus="this.removeAttribute('readonly')" />
-      <button class="primary" id="addBtn">Add</button>
-    </div>
     <div class="entrant-controls">
-      <button class="bulk-btn" id="minusAllBtn">−1 to All</button>
-      <button class="bulk-btn" id="plusAllBtn">+1 to All</button>
-      <button class="danger clear-right-btn" id="clearBtn">Clear All</button>
+      <button class="bulk-btn"        id="shuffleBtn"  title="Shuffle entrant order">🔀</button>
+      <button class="bulk-btn"        id="minusAllBtn" title="Decrease all weights by 1 (minimum 1)">🔽</button>
+      <button class="bulk-btn"        id="plusAllBtn"  title="Increase all weights by 1">🔼</button>
+      <button class="bulk-btn"        id="allToOneBtn" title="Set all weights to 1">⚖️</button>
+      <button class="bulk-btn danger" id="clearBtn"    title="Remove all entrants from this wheel">🗑️</button>
     </div>
     <div class="entrant-section">
       <div class="entrant-scroll-wrap">
         <div class="scroll-fade top"    id="topFade">   <div class="scroll-indicator">▲</div></div>
-        <div class="entrant-list"       id="entrantList"></div>
+        <div class="entrant-list"       id="entrantList">
+          <input id="nameInput" class="entrant-add-input" placeholder="+ Entrant  or  Entrant, weight" name="bw-entrant-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-autocomplete="none" readonly onfocus="this.removeAttribute('readonly')" />
+        </div>
         <div class="scroll-fade bottom" id="bottomFade"><div class="scroll-indicator">▼</div></div>
       </div>
     </div>

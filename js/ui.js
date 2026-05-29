@@ -185,6 +185,13 @@ function renderWheelList() {
     row.appendChild(deleteBtn);
     wheelListEl.appendChild(row);
   });
+
+  const addInline = document.createElement("div");
+  addInline.className   = "wheel-add-inline";
+  addInline.textContent = "— Add Wheel —";
+  addInline.onclick     = () => addWheel("");
+  wheelListEl.appendChild(addInline);
+
   requestAnimationFrame(updateWheelScrollFades);
 }
 
@@ -241,6 +248,10 @@ function deleteWheel(id) {
 
 // ── Entrant list ──────────────────────────────────────────────
 function renderEntrants() {
+  // Save the add-input reference before innerHTML wipes it.
+  // Setting innerHTML="" detaches the element but the JS object (and its
+  // event listeners) survive; we re-append it as the last child below.
+  const addInput = document.getElementById("nameInput");
   entrantListEl.innerHTML = "";
   entrants.forEach((entrant, index) => {
     const row = document.createElement("div");
@@ -297,6 +308,7 @@ function renderEntrants() {
     row.appendChild(nameInput); row.appendChild(ctrl); row.appendChild(removeBtn);
     entrantListEl.appendChild(row);
   });
+  if (addInput) entrantListEl.appendChild(addInput);
   requestAnimationFrame(updateScrollFades);
 }
 
@@ -329,11 +341,18 @@ function parseEntrantInput(text) {
 }
 
 function addEntrant() {
-  const raw = document.getElementById("nameInput").value.trim();
+  const input = document.getElementById("nameInput");
+  const raw   = input.value.trim();
   if (!raw) return;
   entrants.push(parseEntrantInput(raw));
   saveEntrants(); renderEntrants(); updateStats(); resetWheelState();
-  document.getElementById("nameInput").value = "";
+  input.value = "";
+  input.focus();
+  // Scroll the list down so the newly added row is visible just above the input.
+  requestAnimationFrame(() => {
+    entrantListEl.scrollTop = entrantListEl.scrollHeight;
+    updateScrollFades();
+  });
 }
 
 function dismissWinner() {
@@ -591,8 +610,9 @@ function updateWheelScrollFades() {
 wheelListEl.addEventListener("scroll", updateWheelScrollFades);
 
 // ── Confirmation modal ────────────────────────────────────────
-function confirmDialog(message, onConfirm) {
-  document.getElementById("modalMsg").textContent = message;
+function confirmDialog(message, onConfirm, confirmLabel = "Delete") {
+  document.getElementById("modalMsg").textContent     = message;
+  document.getElementById("modalConfirm").textContent = confirmLabel;
   document.getElementById("modalConfirm").onclick = () => { closeModal(); onConfirm(); };
   document.getElementById("modalOverlay").classList.add("show");
 }
@@ -692,7 +712,14 @@ rawDataOverlay.addEventListener("click", e => {
 // rawDataSaveBtn and rawDataLoadBtn removed — file save/load moved to wheel section buttons.
 
 // ── Control wiring ────────────────────────────────────────────
-document.getElementById("addBtn").onclick = addEntrant;
+document.getElementById("shuffleBtn").onclick = () => {
+  if (entrants.length < 2) return;
+  for (let i = entrants.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [entrants[i], entrants[j]] = [entrants[j], entrants[i]];
+  }
+  saveEntrants(); renderEntrants(); resetWheelState();
+};
 
 document.getElementById("minusAllBtn").onclick = () => {
   entrants.forEach(e => { e.weight = Math.max(1, e.weight - 1); });
@@ -704,19 +731,18 @@ document.getElementById("plusAllBtn").onclick = () => {
   saveEntrants(); renderEntrants(); updateStats(); resetWheelState();
 };
 
+document.getElementById("allToOneBtn").onclick = () => {
+  if (!entrants.length) return;
+  confirmDialog("Set all entrant weights to 1?", () => {
+    entrants.forEach(e => { e.weight = 1; });
+    saveEntrants(); renderEntrants(); updateStats(); resetWheelState();
+  }, "Yes");
+};
+
 document.getElementById("clearBtn").onclick = () => {
   confirmDialog("Clear all entrants from this wheel?", () => {
     entrants = []; saveEntrants(); renderEntrants(); updateStats(); resetWheelState();
-  });
-};
-
-document.getElementById("randomizeBtn").onclick = () => {
-  if (entrants.length < 2) return;
-  for (let i = entrants.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [entrants[i], entrants[j]] = [entrants[j], entrants[i]];
-  }
-  saveEntrants(); renderEntrants(); resetWheelState();
+  }, "Yes");
 };
 
 document.getElementById("cloneActiveWheelBtn").onclick = () => cloneWheel(activeSlot);
@@ -742,7 +768,14 @@ document.getElementById("nameInput").addEventListener("keydown", e => {
   if (e.key === "Enter") addEntrant();
 });
 
-document.getElementById("addWheelBtn").onclick = () => addWheel("");
+document.getElementById("clearHistoryBtn").onclick = () => {
+  if (!winnerHistory.length) return;
+  confirmDialog("Clear the winner history for this wheel?", () => {
+    winnerHistory = [];
+    if (settings.keepWinnersLog) saveCurrentSlot();
+    renderHistory();
+  }, "Yes");
+};
 
 document.getElementById("saveWheelsBtn").onclick = () => {
   const blob  = new Blob([JSON.stringify(exportAllData(), null, 2)], { type: "application/json" });

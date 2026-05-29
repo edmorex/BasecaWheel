@@ -121,7 +121,6 @@ body.resizing-v * { cursor: ns-resize !important; user-select: none !important; 
 .wheel-scroll-wrap {
   position: relative;
   overflow: hidden;
-  border-radius: 12px;
   margin-bottom: 6px;
 }
 
@@ -175,6 +174,22 @@ body.resizing-v * { cursor: ns-resize !important; user-select: none !important; 
   user-select: none;
 }
 .wheel-drag-handle:hover { opacity: 0.75; }
+
+.wheel-add-inline {
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.3);
+  cursor: pointer;
+  padding: 5px 8px;
+  border-radius: 8px;
+  user-select: none;
+  transition: color 0.15s, background 0.15s;
+}
+.wheel-add-inline:hover {
+  color: rgba(255,255,255,0.8);
+  background: rgba(255,255,255,0.06);
+}
 
 .wheel-title-edit {
   background: transparent !important;
@@ -241,12 +256,31 @@ button:hover { transform: translateY(-1px); }
   position: relative;
 }
 
+/* Add-new input pinned at the bottom of .entrant-section */
+.entrant-add-input {
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.04) !important; /* overrides global input rule */
+  border: 1px dashed rgba(255,255,255,0.18);
+  border-radius: 10px;
+  padding: 9px 12px;
+  color: white;
+  font-size: 14px;
+  width: 100%;
+  transition: border-color 0.15s, background 0.15s, border-style 0.15s;
+}
+.entrant-add-input:focus {
+  outline: none;
+  background: rgba(255,255,255,0.08) !important;
+  border-color: var(--accent);
+  border-style: solid;
+}
+.entrant-add-input::placeholder { opacity: 0.35; }
+
 .entrant-scroll-wrap {
   position: relative;
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  border-radius: 18px;
 }
 
 .entrant-list {
