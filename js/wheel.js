@@ -111,8 +111,7 @@ window.addEventListener("resize", () => {
   // single-column — the toggle button is hidden by CSS on small screens
   // so the user has no way to restore it.
   if (window.innerWidth <= 640 && !sidebarVisible) {
-    sidebarWrapper.style.width    = "";
-    sidebarWrapper.style.overflow = "";
+    sidebarWrapper.style.width = "";
     document.querySelector(".app").classList.remove("sidebar-collapsed");
     sidebarVisible           = true;
     panelToggle.textContent  = "<";

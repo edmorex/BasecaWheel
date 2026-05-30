@@ -821,11 +821,57 @@ rawDataFileInput.onchange = async () => {
 };
 
 // ── Sidebar toggle ────────────────────────────────────────────
+// wheelSnap holds the frozen-canvas <img> while a sidebar transition is
+// running. Kept module-level so a rapid double-click can clean it up.
+let wheelSnap = null;
+
 panelToggle.onclick = () => {
+  // ── Freeze wheel panel ──────────────────────────────────────
+  // Clean up any previous snap from a rapid re-click.
+  if (wheelSnap) {
+    wheelSnap.remove();
+    wheelSnap = null;
+    canvas.style.opacity     = "";
+    wheelEmoji.style.opacity = "";
+    pointer.style.opacity    = "";
+  }
+
+  // Snapshot the current canvas content into an <img> that covers the
+  // entire wheel panel. This stays visible and stable while the grid
+  // animates, hiding the stretched live canvas, displaced emoji, and
+  // mis-positioned pointer.
+  // Capture CSS dimensions before any layout change happens.
+  const snapRect = canvas.getBoundingClientRect();
+  const snapW    = snapRect.width;
+  const snapH    = snapRect.height;
+
+  wheelSnap     = document.createElement("img");
+  wheelSnap.src = canvas.toDataURL();
+  // Fixed pixel size + centered: the snapshot stays the same visual size
+  // throughout the animation while the panel grows/shrinks around it.
+  // No object-fit stretching, no oval distortion.
+  Object.assign(wheelSnap.style, {
+    position:      "absolute",
+    top:           "50%",
+    left:          "50%",
+    transform:     "translate(-50%, -50%)",
+    width:         snapW + "px",
+    height:        snapH + "px",
+    zIndex:        "6",   // above canvas (z-index:5), below title/overlays
+    pointerEvents: "none",
+    opacity:       "1",
+  });
+  wheelWrap.appendChild(wheelSnap);
+
+  // Hide the live elements instantly — they'll fade back in after resize.
+  canvas.style.opacity     = "0";
+  wheelEmoji.style.opacity = "0";
+  pointer.style.opacity    = "0";
+
+  // ── Animate sidebar ─────────────────────────────────────────
   sidebarVisible = !sidebarVisible;
   if (!sidebarVisible) {
-    sidebarWrapper.style.overflow = "hidden";
-    sidebarWrapper.style.width    = "0px";
+    sidebarWrapper.style.width = "0px";
     document.querySelector(".app").classList.add("sidebar-collapsed");
     panelToggle.textContent = ">";
     panelToggle.title       = "Show panel";
@@ -834,14 +880,37 @@ panelToggle.onclick = () => {
     document.querySelector(".app").classList.remove("sidebar-collapsed");
     panelToggle.textContent = "<";
     panelToggle.title       = "Hide panel";
-    sidebarWrapper.addEventListener("transitionend", function restore() {
-      sidebarWrapper.style.overflow = "";
-      sidebarWrapper.removeEventListener("transitionend", restore);
-    });
   }
+
+  // ── Restore wheel panel ─────────────────────────────────────
   sidebarWrapper.addEventListener("transitionend", function onDone() {
-    resizeCanvas();
     sidebarWrapper.removeEventListener("transitionend", onDone);
+
+    // Recompute canvas size and redraw at the new dimensions.
+    resizeCanvas();
+
+    // Crossfade: snapshot out, live elements in.
+    const FADE = "opacity 0.2s ease";
+    const snap = wheelSnap; // capture ref in case of re-click during fade
+    if (snap) snap.style.transition = FADE;
+    canvas.style.transition     = FADE;
+    wheelEmoji.style.transition = FADE;
+    pointer.style.transition    = FADE;
+
+    if (snap) snap.style.opacity = "0";
+    canvas.style.opacity         = "1";
+    wheelEmoji.style.opacity     = "1";
+    pointer.style.opacity        = "1";
+
+    setTimeout(() => {
+      if (snap) { snap.remove(); if (wheelSnap === snap) wheelSnap = null; }
+      canvas.style.transition     = "";
+      wheelEmoji.style.transition = "";
+      pointer.style.transition    = "";
+      canvas.style.opacity        = "";
+      wheelEmoji.style.opacity    = "";
+      pointer.style.opacity       = "";
+    }, 250);
   });
 };
 
