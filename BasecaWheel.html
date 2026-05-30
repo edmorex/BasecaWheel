@@ -10,7 +10,7 @@
 <body>
 
 <div class="app" id="appEl">
-  <button id="panelToggle" class="panel-toggle" title="Hide panel">&lt;</button>
+  <button id="panelToggle" class="panel-toggle" title="Hide panel"><img src="icons/chevron-left.svg" class="btn-icon" alt=""></button>
 
   <div class="sidebar-wrapper" id="sidebarWrapper">
   <div class="panel sidebar">
@@ -21,11 +21,11 @@
     <div class="wheel-list-section">
       <h3>Wheels</h3>
       <div class="wheel-clear-row">
-        <button class="bulk-btn"        id="loadWheelsBtn"      title="Load wheels from a JSON file">📂</button>
-        <button class="bulk-btn"        id="saveWheelsBtn"      title="Save all wheels to a JSON file">💾</button>
-        <button class="bulk-btn"        id="cloneActiveWheelBtn" title="Clone the active wheel">🪞</button>
-        <button class="bulk-btn"        id="clearHistoryBtn"    title="Wipe the winner history for this wheel">🧻</button>
-        <button class="bulk-btn danger" id="clearWheelsBtn"     title="Delete all wheels and start fresh">🗑️</button>
+        <button class="bulk-btn"        id="loadWheelsBtn"      title="Load wheels from a JSON file"><img src="icons/folder-open.svg" class="btn-icon" alt=""></button>
+        <button class="bulk-btn"        id="saveWheelsBtn"      title="Save all wheels to a JSON file"><img src="icons/save.svg" class="btn-icon" alt=""></button>
+        <button class="bulk-btn"        id="cloneActiveWheelBtn" title="Clone the active wheel"><img src="icons/copy.svg" class="btn-icon" alt=""></button>
+        <button class="bulk-btn"        id="clearHistoryBtn"    title="Wipe the winner history for this wheel"><img src="icons/eraser.svg" class="btn-icon" alt=""></button>
+        <button class="bulk-btn danger" id="clearWheelsBtn"     title="Delete all wheels and start fresh"><img src="icons/trash-2.svg" class="btn-icon" alt=""></button>
       </div>
       <div class="wheel-scroll-wrap">
         <div class="scroll-fade top"    id="wheelTopFade">   <div class="scroll-indicator">▲</div></div>
@@ -38,11 +38,11 @@
 
     <h3>Entrants</h3>
     <div class="entrant-controls">
-      <button class="bulk-btn"        id="shuffleBtn"  title="Shuffle entrant order">🔀</button>
-      <button class="bulk-btn"        id="minusAllBtn" title="Decrease all weights by 1 (minimum 1)">🔽</button>
-      <button class="bulk-btn"        id="plusAllBtn"  title="Increase all weights by 1">🔼</button>
-      <button class="bulk-btn"        id="allToOneBtn" title="Set all weights to 1">⚖️</button>
-      <button class="bulk-btn danger" id="clearBtn"    title="Remove all entrants from this wheel">🗑️</button>
+      <button class="bulk-btn"        id="shuffleBtn"  title="Shuffle entrant order"><img src="icons/shuffle.svg" class="btn-icon" alt=""></button>
+      <button class="bulk-btn"        id="minusAllBtn" title="Decrease all weights by 1 (minimum 1)"><img src="icons/chevrons-down.svg" class="btn-icon" alt=""></button>
+      <button class="bulk-btn"        id="plusAllBtn"  title="Increase all weights by 1"><img src="icons/chevrons-up.svg" class="btn-icon" alt=""></button>
+      <button class="bulk-btn"        id="allToOneBtn" title="Set all weights to 1"><img src="icons/scale.svg" class="btn-icon" alt=""></button>
+      <button class="bulk-btn danger" id="clearBtn"    title="Remove all entrants from this wheel"><img src="icons/trash-2.svg" class="btn-icon" alt=""></button>
     </div>
     <div class="entrant-section">
       <div class="entrant-scroll-wrap">
@@ -55,7 +55,7 @@
     </div>
 
     <div class="sidebar-footer">
-      <button id="settingsBtn" class="settings-btn">⚙️</button>
+      <button id="settingsBtn" class="settings-btn" title="Mischief Settings"><img src="icons/settings.svg" class="btn-icon" alt=""></button>
       <div class="stats" id="stats"></div>
     </div>
   </div>
@@ -80,8 +80,8 @@
       </div>
     </div>
 
-    <button id="muteBtn" class="mute-btn" title="Mute sounds">🔊</button>
-    <button id="historyBtn" class="history-btn" title="Show winner history">🗒️</button>
+    <button id="muteBtn" class="mute-btn" title="Mute sounds"><img src="icons/volume-2.svg" class="btn-icon" alt=""></button>
+    <button id="historyBtn" class="history-btn" title="Show winner history"><img src="icons/scroll.svg" class="btn-icon" alt=""></button>
     <div id="historyList" class="history-list hidden"></div>
   </div>
 </div>
@@ -116,7 +116,7 @@
 <!-- ── Raw Data modal ── -->
 <div class="modal-overlay" id="rawDataOverlay">
   <div class="raw-data-box">
-    <h3 class="raw-data-title">📦 Raw Data</h3>
+    <h3 class="raw-data-title"><img src="icons/package.svg" class="heading-icon" alt=""> Raw Data</h3>
     <p class="raw-data-hint">All wheels, entrants, and settings as JSON. Edit or paste directly. Clicking "Save &amp; Close" imports any changes.</p>
     <textarea id="rawDataText" spellcheck="false"></textarea>
     <div class="raw-data-error" id="rawDataError"></div>
@@ -132,8 +132,8 @@
 <div id="settingsOverlay" class="settings-overlay hidden">
   <div id="settingsPanel" class="settings-panel">
     <div class="settings-panel-header">
-      <h3>😈 Mischief Settings</h3>
-      <button id="rawDataBtn" class="settings-close-btn">📦 Edit Raw Data</button>
+      <h3><img src="icons/settings.svg" class="heading-icon" alt=""> Mischief Settings</h3>
+      <button id="rawDataBtn" class="settings-close-btn"><img src="icons/package.svg" class="btn-icon" alt=""> Edit Raw Data</button>
     </div>
     <div class="settings-body-wrap">
       <div class="scroll-fade top"    id="settingsTopFade">   <div class="scroll-indicator">▲</div></div>
@@ -141,12 +141,12 @@
         <div class="settings-left-col">
           <section class="settings-section">
             <div class="settings-section-title">Chances</div>
-            <label>⏱️ Spin Time      <input type="range"  id="spinTime"      min="0" max="100" step="1" /></label>
-            <label>💥 Explode %      <input type="number" id="explodeChance" min="0" max="100" step="1" /></label>
-            <label>🔄 Reverse Spin % <input type="number" id="reverseChance" min="0" max="100" step="1" /></label>
-            <label>🫣 Slowdown %     <input type="number" id="slowChance"    min="0" max="100" step="1" /></label>
-            <label>😜 Boost %        <input type="number" id="speedChance"   min="0" max="100" step="1" /></label>
-            <label>🌀 Late Shuffle % <input type="number" id="swapChance"    min="0" max="100" step="1" /></label>
+            <label><span class="label-text"><img src="icons/timer.svg"      class="label-icon" alt="">Spin Time</span>      <input type="range"  id="spinTime"      min="0" max="100" step="1" /></label>
+            <label><span class="label-text"><img src="icons/zap.svg"        class="label-icon" alt="">Explode %</span>      <input type="number" id="explodeChance" min="0" max="100" step="1" /></label>
+            <label><span class="label-text"><img src="icons/rotate-ccw.svg" class="label-icon" alt="">Reverse Spin %</span> <input type="number" id="reverseChance" min="0" max="100" step="1" /></label>
+            <label><span class="label-text"><img src="icons/turtle.svg"     class="label-icon" alt="">Slowdown %</span>     <input type="number" id="slowChance"    min="0" max="100" step="1" /></label>
+            <label><span class="label-text"><img src="icons/rabbit.svg"     class="label-icon" alt="">Boost %</span>        <input type="number" id="speedChance"   min="0" max="100" step="1" /></label>
+            <label><span class="label-text"><img src="icons/shuffle.svg"    class="label-icon" alt="">Late Shuffle %</span> <input type="number" id="swapChance"    min="0" max="100" step="1" /></label>
           </section>
           <section class="settings-section">
             <div class="settings-section-title">Features</div>
@@ -161,11 +161,11 @@
         </div>
         <div class="settings-right-col">
           <section class="settings-section">
-            <div class="settings-section-title">🔊 Wheel Sounds</div>
+            <div class="settings-section-title"><img src="icons/volume-2.svg" class="label-icon" alt=""> Wheel Sounds</div>
             <div id="sndSettingsContainer"></div>
           </section>
           <section class="settings-section">
-            <div class="settings-section-title">🖼️ Wheel Images</div>
+            <div class="settings-section-title"><img src="icons/image.svg" class="label-icon" alt=""> Wheel Images</div>
             <div id="imgSettingsContainer" class="img-states-grid"></div>
           </section>
         </div>
