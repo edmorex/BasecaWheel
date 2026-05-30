@@ -128,6 +128,19 @@
 </div>
 <input type="file" id="rawDataFileInput" accept=".json,application/json,text/plain" style="display:none" />
 
+<!-- ── Image Gallery modal ── -->
+<div class="modal-overlay" id="imageGalleryOverlay">
+  <div class="gallery-box">
+    <h3 class="gallery-title"><img src="icons/image.svg" class="heading-icon" alt=""> Select an Image</h3>
+    <p class="gallery-hint">Images in the <code>images/</code> folder. Click to select, or double-click to add.</p>
+    <div class="gallery-grid" id="galleryGrid"></div>
+    <div class="gallery-actions">
+      <button id="galleryCancel">Cancel</button>
+      <button id="galleryConfirm" class="primary">Add Selected</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Mischief Settings modal ── -->
 <div id="settingsOverlay" class="settings-overlay hidden">
   <div id="settingsPanel" class="settings-panel">
