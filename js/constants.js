@@ -65,11 +65,20 @@ const DEFAULT_IMAGES = {
 };
 
 // Labels shown in the settings UI for each image state.
+// { icon } is a Lucide SVG filename (without extension) in icons/.
 const IMAGE_STATE_LABELS = {
-  idle:"😻 Idle", excited:"🤩 Excited", nervous:"😬 Nervous",
-  shocked:"😮 Shocked", relieved:"😅 Relieved", speed:"😜 Speed Boost",
-  slowdown:"🫣 Slowdown", swap:"🌀 Late Shuffle", reverse:"🔄 Reverse Spin",
-  explode:"💥 Explode", winner:"🥳 Winner", nobody:"🙀 Nobody Wins",
+  idle:     { icon: "coffee",   text: "Idle" },
+  excited:  { icon: "sparkles", text: "Excited" },
+  nervous:  { icon: "activity", text: "Nervous" },
+  shocked:  { icon: "frown",    text: "Shocked" },
+  relieved: { icon: "smile",    text: "Relieved" },
+  speed:    { icon: "rabbit",   text: "Speed Boost" },
+  slowdown: { icon: "turtle",   text: "Slowdown" },
+  swap:     { icon: "shuffle",  text: "Late Shuffle" },
+  reverse:  { icon: "rotate-ccw", text: "Reverse Spin" },
+  explode:  { icon: "zap",      text: "Explode" },
+  winner:   { icon: "trophy",   text: "Winner" },
+  nobody:   { icon: "skull",    text: "Nobody Wins" },
 };
 
 // ── Sound system ──────────────────────────────────────────────
@@ -86,15 +95,16 @@ const DEFAULT_SOUNDS = {
 };
 
 // Labels shown in the settings UI for each sound key.
+// { icon } is a Lucide SVG filename (without extension) in icons/.
 const SOUND_LABELS = {
-  bg:       "🎵 Background",
-  tick:     "🎯 Tick",
-  boost:    "😜 Speed Boost",
-  explode:  "💥 Explode",
-  fanfare:  "🥳 Winner",
-  reverse:  "🔄 Reverse",
-  shuffle:  "🌀 Late Shuffle",
-  slowdown: "🫣 Slowdown",
+  bg:       { icon: "music",               text: "Background" },
+  tick:     { icon: "mouse-pointer-click", text: "Tick" },
+  boost:    { icon: "rabbit",              text: "Speed Boost" },
+  explode:  { icon: "zap",                 text: "Explode" },
+  fanfare:  { icon: "trophy",              text: "Winner" },
+  reverse:  { icon: "rotate-ccw",          text: "Reverse" },
+  shuffle:  { icon: "shuffle",             text: "Late Shuffle" },
+  slowdown: { icon: "turtle",              text: "Slowdown" },
 };
 
 // Per-sound volume multipliers applied via the Web Audio gain node.

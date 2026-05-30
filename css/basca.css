@@ -230,6 +230,38 @@ body.resizing-v * { cursor: ns-resize !important; user-select: none !important; 
   font-size: 14px;
 }
 
+/* ── Lucide icon helpers ── */
+/* Icon-only buttons (bulk-btn, mute, history, settings) */
+.btn-icon {
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+/* Groups icon + text on one line inside a column-flex label */
+.label-text {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Inline decorative icons in labels and section headings */
+.label-icon {
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
+  margin-right: 3px;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+/* Heading icon in h3 (Mischief Settings) */
+.heading-icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  pointer-events: none;
+}
+
 /* ── Rest of sidebar ── */
 .input-row {
   display: grid;
@@ -256,6 +288,11 @@ button {
   font-weight: bold;
   transition: 0.15s ease;
   font-size: 14px;
+  /* Center icon or text content in every button */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 button:hover { transform: translateY(-1px); }
@@ -848,11 +885,11 @@ canvas {
 
 .settings-btn {
   flex-shrink: 0;
-  width: 52px; height: 52px;
+  width: 40px; height: 40px;
   border-radius: 50%;
   background: rgba(15,23,42,0.95);
   color: white;
-  font-size: 24px;
+  font-size: 18px;
   border: 1px solid rgba(255,255,255,0.12);
   box-shadow: 0 4px 16px rgba(0,0,0,0.35);
   padding: 0;
@@ -892,7 +929,7 @@ canvas {
   border-bottom: 1px solid rgba(255,255,255,0.08);
   flex-shrink: 0;
 }
-.settings-panel-header h3 { margin: 0; font-size: 16px; opacity: 1; letter-spacing: 0; text-transform: none; }
+.settings-panel-header h3 { margin: 0; font-size: 16px; opacity: 1; letter-spacing: 0; text-transform: none; display: flex; align-items: center; gap: 6px; }
 .settings-close-btn {
   background: none;
   border: none;
@@ -969,16 +1006,13 @@ canvas {
   flex-direction: column;
   gap: 5px;
 }
-.img-state-header { font-size: 12px; font-weight: 600; opacity: 0.8; }
+.img-state-header { font-size: 12px; font-weight: 600; opacity: 0.8; display: flex; align-items: center; }
 .img-url-list { display: flex; flex-direction: column; gap: 3px; }
 .img-url-item {
   display: grid;
-  grid-template-columns: 1fr 26px;
+  grid-template-columns: 1fr 24px;
   gap: 5px;
   align-items: center;
-  background: rgba(255,255,255,0.05);
-  border-radius: 7px;
-  padding: 3px 4px 3px 8px;
 }
 .img-url-text {
   font-size: 11px;
@@ -999,22 +1033,20 @@ canvas {
 }
 .img-remove-btn:hover { background: rgba(239,68,68,0.38); transform: none; }
 .img-url-edit {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid transparent;
-  border-radius: 0;
-  padding: 1px 2px;
+  background: #0f172a;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 7px;
+  padding: 4px 7px;
   color: white;
   width: 100%;
   font-size: 11px;
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  opacity: 0.75;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.img-url-edit:focus { outline: none; border-bottom-color: var(--accent); opacity: 1; }
-.img-add-row { display: grid; grid-template-columns: 1fr 50px; gap: 5px; }
+.img-url-edit:focus { outline: none; border-color: var(--accent); }
+.img-add-row { display: grid; grid-template-columns: 1fr 24px; gap: 5px; align-items: center; }
 .img-url-input {
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-size: 11px;
@@ -1025,7 +1057,15 @@ canvas {
   color: white;
 }
 .img-url-input:focus { outline: none; border-color: var(--accent); }
-.img-add-btn { font-size: 12px; padding: 4px 6px; }
+.img-add-btn {
+  width: 24px; height: 24px;
+  padding: 0;
+  border-radius: 5px;
+  background: rgba(34,197,94,0.18);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.img-add-btn:hover { background: rgba(34,197,94,0.38); transform: none; }
 .settings-left-col  { display: flex; flex-direction: column; gap: 16px; }
 .settings-right-col { display: flex; flex-direction: column; gap: 16px; }
 .snd-row {
@@ -1145,7 +1185,7 @@ canvas {
   gap: 12px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.6);
 }
-.raw-data-title { font-size: 18px; font-weight: bold; margin: 0; }
+.raw-data-title { font-size: 18px; font-weight: bold; margin: 0; display: flex; align-items: center; gap: 6px; }
 .raw-data-hint  { font-size: 12px; opacity: 0.6; margin: 0; line-height: 1.4; }
 .raw-data-error { font-size: 13px; color: var(--danger); min-height: 18px; }
 #rawDataText {

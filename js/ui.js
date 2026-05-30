@@ -165,8 +165,8 @@ function renderWheelList() {
 
     // ── Delete button ─────────────────────────────────────────
     const deleteBtn       = document.createElement("button");
-    deleteBtn.className   = "remove-btn";
-    deleteBtn.textContent = "✕";
+    deleteBtn.className = "remove-btn";
+    deleteBtn.innerHTML = '<img src="icons/circle-x.svg" class="btn-icon" alt="">';
     deleteBtn.onclick     = e => { e.stopPropagation(); deleteWheel(wheel.id); };
 
     // ── Row click activates wheel ─────────────────────────────
@@ -274,9 +274,9 @@ function renderEntrants() {
     ctrl.className = "weight-control";
 
     const minus  = document.createElement("button");
-    minus.className = "weight-btn"; minus.textContent = "−";
+    minus.className = "weight-btn"; minus.innerHTML = '<img src="icons/circle-minus.svg" class="btn-icon" alt="">';
     const plus   = document.createElement("button");
-    plus.className  = "weight-btn"; plus.textContent  = "+";
+    plus.className  = "weight-btn"; plus.innerHTML  = '<img src="icons/circle-plus.svg"  class="btn-icon" alt="">';
     const wInput = document.createElement("input");
     wInput.type = "number"; wInput.className = "weight-input"; wInput.value = entrant.weight;
 
@@ -299,7 +299,7 @@ function renderEntrants() {
     ctrl.appendChild(minus); ctrl.appendChild(wInput); ctrl.appendChild(plus);
 
     const removeBtn       = document.createElement("button");
-    removeBtn.className   = "remove-btn"; removeBtn.textContent = "✕";
+    removeBtn.className = "remove-btn"; removeBtn.innerHTML = '<img src="icons/circle-x.svg" class="btn-icon" alt="">';
     removeBtn.onclick     = () => {
       entrants.splice(index, 1);
       saveEntrants(); renderEntrants(); updateStats(); resetWheelState();
@@ -455,8 +455,8 @@ function renderSoundSettings() {
     row.className = "snd-row";
 
     const label = document.createElement("div");
-    label.className   = "snd-label";
-    label.textContent = SOUND_LABELS[key];
+    label.className = "snd-label";
+    label.innerHTML = `<img src="icons/${SOUND_LABELS[key].icon}.svg" class="label-icon" alt="">${SOUND_LABELS[key].text}`;
 
     const effective = (settings.customSounds && key in settings.customSounds)
       ? settings.customSounds[key]
@@ -510,8 +510,8 @@ function renderImageSettings() {
     section.className = "img-state-section";
 
     const header = document.createElement("div");
-    header.className   = "img-state-header";
-    header.textContent = IMAGE_STATE_LABELS[state];
+    header.className = "img-state-header";
+    header.innerHTML = `<img src="icons/${IMAGE_STATE_LABELS[state].icon}.svg" class="label-icon" alt="">${IMAGE_STATE_LABELS[state].text}`;
     section.appendChild(header);
 
     if (urls.length > 0) {
@@ -528,8 +528,9 @@ function renderImageSettings() {
     input.className   = "img-url-input";
     input.placeholder = "images/relative.png  or full https://…";
     const addBtn  = document.createElement("button");
-    addBtn.textContent = "Add";
-    addBtn.className   = "primary img-add-btn";
+    addBtn.innerHTML = '<img src="icons/circle-plus.svg" class="btn-icon" alt="">';
+    addBtn.className = "img-add-btn";
+    addBtn.title     = "Add image";
     addBtn.onclick = () => {
       const val = input.value.trim();
       if (!val) return;
@@ -579,8 +580,8 @@ function makeUrlRow(state, url, idx) {
   });
 
   const removeBtn       = document.createElement("button");
-  removeBtn.textContent = "✕";
-  removeBtn.className   = "img-remove-btn";
+  removeBtn.innerHTML = '<img src="icons/circle-x.svg" class="btn-icon" alt="">';
+  removeBtn.className = "img-remove-btn";
   removeBtn.onmousedown = e => e.preventDefault(); // keep input focused until click fires
   removeBtn.onclick     = () => {
     settings.customImages[state].splice(idx, 1);
@@ -873,13 +874,13 @@ panelToggle.onclick = () => {
   if (!sidebarVisible) {
     sidebarWrapper.style.width = "0px";
     document.querySelector(".app").classList.add("sidebar-collapsed");
-    panelToggle.textContent = ">";
-    panelToggle.title       = "Show panel";
+    panelToggle.innerHTML = '<img src="icons/chevron-right.svg" class="btn-icon" alt="">';
+    panelToggle.title     = "Show panel";
   } else {
     sidebarWrapper.style.width = "520px";
     document.querySelector(".app").classList.remove("sidebar-collapsed");
-    panelToggle.textContent = "<";
-    panelToggle.title       = "Hide panel";
+    panelToggle.innerHTML = '<img src="icons/chevron-left.svg" class="btn-icon" alt="">';
+    panelToggle.title     = "Hide panel";
   }
 
   // ── Restore wheel panel ─────────────────────────────────────
@@ -944,8 +945,10 @@ historyBtn.onclick = () => {
 // ── Mute ──────────────────────────────────────────────────────
 muteBtn.onclick = () => {
   muted = !muted;
-  muteBtn.textContent = muted ? "🔇" : "🔊";
-  muteBtn.title       = muted ? "Unmute sounds" : "Mute sounds";
+  muteBtn.innerHTML = muted
+    ? '<img src="icons/volume-x.svg" class="btn-icon" alt="">'
+    : '<img src="icons/volume-2.svg" class="btn-icon" alt="">';
+  muteBtn.title = muted ? "Unmute sounds" : "Mute sounds";
   if (muted) {
     if (bgFadeId) { clearTimeout(bgFadeId); bgFadeId = null; }
     stopBg();

@@ -114,8 +114,8 @@ window.addEventListener("resize", () => {
     sidebarWrapper.style.width = "";
     document.querySelector(".app").classList.remove("sidebar-collapsed");
     sidebarVisible           = true;
-    panelToggle.textContent  = "<";
-    panelToggle.title        = "Hide panel";
+    panelToggle.innerHTML = '<img src="icons/chevron-left.svg" class="btn-icon" alt="">';
+    panelToggle.title     = "Hide panel";
   }
   // Re-evaluate scroll fades after crossing the mobile breakpoint —
   // the lists switch to overflow:visible, making previous show-classes stale.

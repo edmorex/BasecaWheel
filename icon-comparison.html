@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Icon Comparison</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  :root {
+    --bg:     #020617;
+    --panel:  #0f172a;
+    --panel2: #1e293b;
+    --text:   #f8fafc;
+    --accent: #22c55e;
+    --gold:   #fbbf24;
+    --dim:    rgba(255,255,255,0.45);
+    --border: rgba(255,255,255,0.08);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 32px 24px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: radial-gradient(circle at top, #1e293b, #020617);
+    min-height: 100vh;
+  }
+
+  h1 {
+    font-size: 22px;
+    margin: 0 0 6px;
+    color: var(--text);
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--dim);
+    margin: 0 0 28px;
+  }
+
+  /* ── Section headers ── */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--dim);
+    padding: 12px 0 4px;
+  }
+
+  /* ── Table ── */
+  table {
+    width: 100%;
+    max-width: 820px;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--dim);
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.03); }
+
+  /* Section-divider rows */
+  tbody tr.section-row td {
+    padding: 18px 16px 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--gold);
+    border-bottom: 1px solid rgba(251,191,36,0.2);
+    background: none;
+  }
+
+  td {
+    padding: 10px 16px;
+    vertical-align: middle;
+  }
+
+  /* Description column */
+  .col-desc { color: var(--text); width: 22%; }
+
+  /* Current emoji column */
+  .col-current {
+    font-size: 22px;
+    text-align: center;
+    width: 10%;
+  }
+
+  /* Icon cell — icon + name stacked */
+  .icon-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+  .icon-wrap {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--panel2);
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  /* Lucide SVG sizing */
+  .icon-wrap svg {
+    width: 18px;
+    height: 18px;
+    stroke: var(--text);
+    stroke-width: 1.75;
+  }
+  /* FA icon sizing */
+  .icon-wrap .fa-solid,
+  .icon-wrap .fa-regular {
+    font-size: 16px;
+    color: var(--text);
+  }
+  .icon-name {
+    font-size: 12px;
+    color: var(--dim);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  /* No-equivalent cell */
+  .no-equiv {
+    color: rgba(255,255,255,0.2);
+    font-style: italic;
+    font-size: 13px;
+  }
+
+  .col-lucide { width: 34%; }
+  .col-fa     { width: 34%; }
+</style>
+</head>
+<body>
+
+<h1>Icon Comparison</h1>
+<p class="subtitle">BascaWheel — current emoji vs. Lucide Icons vs. Font Awesome 6 Free</p>
+
+<table>
+  <thead>
+    <tr>
+      <th class="col-desc">Button / Element</th>
+      <th class="col-current">Current</th>
+      <th class="col-lucide">Lucide</th>
+      <th class="col-fa">Font Awesome 6 Free</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <!-- ── Wheel buttons ── -->
+    <tr class="section-row"><td colspan="4">Wheel Buttons</td></tr>
+
+    <tr>
+      <td class="col-desc">Load</td>
+      <td class="col-current">📂</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="folder-open"></i></div><span class="icon-name">folder-open</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-folder-open"></i></div><span class="icon-name">fa-folder-open</span></div></td>
+    </tr>
+    <tr>
+      <td class="col-desc">Save</td>
+      <td class="col-current">💾</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="save"></i></div><span class="icon-name">save</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-floppy-disk"></i></div><span class="icon-name">fa-floppy-disk</span></div></td>
+    </tr>
+    <tr>
+      <td class="col-desc">Clone</td>
+      <td class="col-current">🪞</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="copy"></i></div><span class="icon-name">copy</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-clone"></i></div><span class="icon-name">fa-clone</span></div></td>
+    </tr>
+    <tr>
+      <td class="col-desc">Clear History</td>
+      <td class="col-current">🧻</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="eraser"></i></div><span class="icon-name">eraser</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-eraser"></i></div><span class="icon-name">fa-eraser</span></div></td>
+    </tr>
+    <tr>
+      <td class="col-desc">Clear All Wheels</td>
+      <td class="col-current">🗑️</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="trash-2"></i></div><span class="icon-name">trash-2</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-trash"></i></div><span class="icon-name">fa-trash</span></div></td>
+    </tr>
+
+    <!-- ── Entrant buttons ── -->
+    <tr class="section-row"><td colspan="4">Entrant Buttons</td></tr>
+
+    <tr>
+      <td class="col-desc">Shuffle</td>
+      <td class="col-current">🔀</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="shuffle"></i></div><span class="icon-name">shuffle</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-shuffle"></i></div><span class="icon-name">fa-shuffle</span></div></td>
+    </tr>
+    <tr>
+      <td class="col-desc">−1 to All</td>
+      <td class="col-current">🔽</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="chevrons-down"></i></div><span class="icon-name">chevrons-down</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-circle-minus"></i></div><span class="icon-name">fa-circle-minus</span></div></td>
+    </tr>
+    <tr>
+      <td class="col-desc">+1 to All</td>
+      <td class="col-current">🔼</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="chevrons-up"></i></div><span class="icon-name">chevrons-up</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-circle-plus"></i></div><span class="icon-name">fa-circle-plus</span></div></td>
+    </tr>
+    <tr>
+      <td class="col-desc">All to 1</td>
+      <td class="col-current">⚖️</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="scale"></i></div><span class="icon-name">scale</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-scale-balanced"></i></div><span class="icon-name">fa-scale-balanced</span></div></td>
+    </tr>
+    <tr>
+      <td class="col-desc">Clear List</td>
+      <td class="col-current">🗑️</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="trash-2"></i></div><span class="icon-name">trash-2</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-trash"></i></div><span class="icon-name">fa-trash</span></div></td>
+    </tr>
+
+    <!-- ── Wheel panel overlays ── -->
+    <tr class="section-row"><td colspan="4">Wheel Panel Buttons</td></tr>
+
+    <tr>
+      <td class="col-desc">Settings</td>
+      <td class="col-current">⚙️</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="settings"></i></div><span class="icon-name">settings</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-gear"></i></div><span class="icon-name">fa-gear</span></div></td>
+    </tr>
+    <tr>
+      <td class="col-desc">Sound on</td>
+      <td class="col-current">🔊</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="volume-2"></i></div><span class="icon-name">volume-2</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-volume-high"></i></div><span class="icon-name">fa-volume-high</span></div></td>
+    </tr>
+    <tr>
+      <td class="col-desc">Sound off</td>
+      <td class="col-current">🔇</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="volume-x"></i></div><span class="icon-name">volume-x</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-volume-xmark"></i></div><span class="icon-name">fa-volume-xmark</span></div></td>
+    </tr>
+    <tr>
+      <td class="col-desc">Winner History</td>
+      <td class="col-current">🗒️</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="scroll"></i></div><span class="icon-name">scroll</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-scroll"></i></div><span class="icon-name">fa-scroll</span></div></td>
+    </tr>
+
+    <!-- ── Settings modal ── -->
+    <tr class="section-row"><td colspan="4">Settings Modal</td></tr>
+
+    <tr>
+      <td class="col-desc">Raw Data</td>
+      <td class="col-current">📦</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="package"></i></div><span class="icon-name">package</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-box"></i></div><span class="icon-name">fa-box</span></div></td>
+    </tr>
+    <tr>
+      <td class="col-desc">"Mischief Settings" title</td>
+      <td class="col-current">😈</td>
+      <td><span class="no-equiv">— no equivalent</span></td>
+      <td><span class="no-equiv">— no equivalent</span></td>
+    </tr>
+    <tr>
+      <td class="col-desc">Sounds section heading</td>
+      <td class="col-current">🔊</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="volume-2"></i></div><span class="icon-name">volume-2</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-volume-high"></i></div><span class="icon-name">fa-volume-high</span></div></td>
+    </tr>
+    <tr>
+      <td class="col-desc">Images section heading</td>
+      <td class="col-current">🖼️</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="image"></i></div><span class="icon-name">image</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-image"></i></div><span class="icon-name">fa-image</span></div></td>
+    </tr>
+
+    <!-- ── Settings chance labels ── -->
+    <tr class="section-row"><td colspan="4">Settings Chance Labels (decorative, inside text)</td></tr>
+
+    <tr>
+      <td class="col-desc">Spin Time</td>
+      <td class="col-current">⏱️</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="timer"></i></div><span class="icon-name">timer</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-stopwatch"></i></div><span class="icon-name">fa-stopwatch</span></div></td>
+    </tr>
+    <tr>
+      <td class="col-desc">Explode %</td>
+      <td class="col-current">💥</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="zap"></i></div><span class="icon-name">zap</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-explosion"></i></div><span class="icon-name">fa-explosion</span></div></td>
+    </tr>
+    <tr>
+      <td class="col-desc">Reverse Spin %</td>
+      <td class="col-current">🔄</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="rotate-ccw"></i></div><span class="icon-name">rotate-ccw</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-rotate-left"></i></div><span class="icon-name">fa-rotate-left</span></div></td>
+    </tr>
+    <tr>
+      <td class="col-desc">Slowdown %</td>
+      <td class="col-current">🫣</td>
+      <td><span class="no-equiv">— no equivalent</span></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-gauge-simple-low"></i></div><span class="icon-name">fa-gauge-simple-low</span></div></td>
+    </tr>
+    <tr>
+      <td class="col-desc">Boost %</td>
+      <td class="col-current">😜</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="gauge"></i></div><span class="icon-name">gauge</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-gauge-high"></i></div><span class="icon-name">fa-gauge-high</span></div></td>
+    </tr>
+    <tr>
+      <td class="col-desc">Late Shuffle %</td>
+      <td class="col-current">🌀</td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i data-lucide="rotate-cw"></i></div><span class="icon-name">rotate-cw</span></div></td>
+      <td><div class="icon-cell"><div class="icon-wrap"><i class="fa-solid fa-rotate-right"></i></div><span class="icon-name">fa-rotate-right</span></div></td>
+    </tr>
+
+  </tbody>
+</table>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>
