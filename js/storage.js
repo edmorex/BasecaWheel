@@ -12,8 +12,23 @@ function newSlotId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
+// Wraps localStorage.setItem so a QuotaExceededError can't throw uncaught and
+// break the app. Safari Private Browsing historically gives localStorage a
+// near-zero quota and throws on any write; a full disk or full quota does too.
+// Returns true on success, false on failure. All persistence in the app goes
+// through this — never call localStorage.setItem directly.
+function safeSetItem(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e) {
+    console.warn("localStorage write failed for", key, "—", e && e.message);
+    return false;
+  }
+}
+
 function saveWheelList() {
-  localStorage.setItem(WHEEL_LIST_KEY, JSON.stringify(wheelList));
+  safeSetItem(WHEEL_LIST_KEY, JSON.stringify(wheelList));
 }
 
 function defaultSlotData() {
@@ -51,7 +66,7 @@ function loadSlotData(slot) {
 
 function saveCurrentSlot() {
   if (!activeSlot) return;
-  localStorage.setItem(SLOT_KEY(activeSlot), JSON.stringify({
+  safeSetItem(SLOT_KEY(activeSlot), JSON.stringify({
     title:    slotTitle,
     entrants: entrants,
     settings: settings,
@@ -73,7 +88,7 @@ function saveEntrants() { saveCurrentSlot(); }
 // the call itself only runs after the full page script load is complete.
 function activateSlot(slotId) {
   activeSlot = slotId;
-  localStorage.setItem(ACTIVE_SLOT_KEY, slotId);
+  safeSetItem(ACTIVE_SLOT_KEY, slotId);
 
   const data = loadSlotData(slotId);
   slotTitle     = data.title;

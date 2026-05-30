@@ -159,7 +159,7 @@ function renderWheelList() {
         // loadSlotData() returns the correct title when this wheel is activated.
         const slotData = loadSlotData(wheel.id);
         slotData.title = wheel.title;
-        localStorage.setItem(SLOT_KEY(wheel.id), JSON.stringify(slotData));
+        safeSetItem(SLOT_KEY(wheel.id), JSON.stringify(slotData));
       }
     };
 
@@ -199,7 +199,7 @@ function addWheel(title) {
   const id       = newSlotId();
   const newTitle = title.trim() || `Wheel ${wheelList.length + 1}`;
   wheelList.push({ id, title: newTitle });
-  localStorage.setItem(SLOT_KEY(id), JSON.stringify({
+  safeSetItem(SLOT_KEY(id), JSON.stringify({
     title:    newTitle,
     entrants: JSON.parse(JSON.stringify(DEFAULT_ENTRANTS)),
     settings: { ...SETTINGS_DEFAULTS },
@@ -217,7 +217,7 @@ function cloneWheel(sourceId) {
   const newTitle = source.title ? source.title + " (copy)" : "Copy";
   const srcData  = loadSlotData(sourceId);
   wheelList.push({ id, title: newTitle });
-  localStorage.setItem(SLOT_KEY(id), JSON.stringify({ ...srcData, title: newTitle }));
+  safeSetItem(SLOT_KEY(id), JSON.stringify({ ...srcData, title: newTitle }));
   saveWheelList();
   saveCurrentSlot();
   activateSlot(id);
@@ -758,7 +758,7 @@ function importAllData(payload) {
       },
       history: Array.isArray(w.history) ? w.history : [],
     };
-    localStorage.setItem(SLOT_KEY(w.id), JSON.stringify(slot));
+    safeSetItem(SLOT_KEY(w.id), JSON.stringify(slot));
   });
   saveWheelList();
 
@@ -841,7 +841,7 @@ document.getElementById("clearWheelsBtn").onclick = () => {
     wheelList.forEach(w => localStorage.removeItem(SLOT_KEY(w.id)));
     const id = newSlotId();
     wheelList = [{ id, title: "Default" }];
-    localStorage.setItem(SLOT_KEY(id), JSON.stringify(defaultSlotData()));
+    safeSetItem(SLOT_KEY(id), JSON.stringify(defaultSlotData()));
     saveWheelList();
     activateSlot(id);
   });
@@ -1076,7 +1076,7 @@ applyDividerHeight(parseInt(localStorage.getItem(DIVIDER_KEY)) || 110);
     document.removeEventListener("touchmove", onMove);
     document.removeEventListener("touchend",  onUp);
     document.body.classList.remove("resizing-v");
-    localStorage.setItem(DIVIDER_KEY, parseInt(wheelListEl.style.height));
+    safeSetItem(DIVIDER_KEY, parseInt(wheelListEl.style.height));
     updateWheelScrollFades();
     updateScrollFades();
   }
@@ -1103,3 +1103,51 @@ applyDividerHeight(parseInt(localStorage.getItem(DIVIDER_KEY)) || 110);
   divider.addEventListener("touchstart", e => { e.preventDefault(); onDown(e.touches[0].clientY); },
     { passive: false });
 })();
+
+// ── Idle sleep ────────────────────────────────────────────────
+// The wheel's idle rotation redraws the canvas every frame and the CSS
+// flames animate continuously, so a visible-but-untouched tab churns the
+// CPU/GPU forever (battery drain, fan spin-up, mobile heat). After 5 minutes
+// with no user interaction we stop the idle-rotation loop, stop any confetti
+// burst, and pause all CSS animations via the body.anim-paused class. Any
+// interaction wakes everything back up.
+//
+// rAF already pauses when the tab is backgrounded; this handles the
+// foreground-but-idle case rAF can't.
+const IDLE_SLEEP_MS = 5 * 60 * 1000;
+let idleSleepTimer  = null;
+let isAsleep        = false;
+
+function goToSleep() {
+  if (isAsleep) return;
+  isAsleep = true;
+  document.body.classList.add("anim-paused");
+  stopIdleRotation();
+  stopConfettiBursts();
+}
+
+function wakeFromSleep() {
+  if (isAsleep) {
+    isAsleep = false;
+    document.body.classList.remove("anim-paused");
+    // Resume whatever should be running for the current state.
+    if (!spinning && !winnerShowing) {
+      startIdleRotation();
+    } else if (winnerShowing && !nobodyWinsActive) {
+      startConfettiBursts(); // restart the celebration for a normal win
+    }
+  }
+  resetIdleTimer();
+}
+
+function resetIdleTimer() {
+  if (idleSleepTimer) clearTimeout(idleSleepTimer);
+  idleSleepTimer = setTimeout(goToSleep, IDLE_SLEEP_MS);
+}
+
+// capture:true so we still see the gesture even if a handler stops it;
+// passive:true since we never preventDefault here.
+["pointerdown", "pointermove", "keydown", "touchstart", "wheel", "scroll"]
+  .forEach(ev => document.addEventListener(ev, wakeFromSleep, { passive: true, capture: true }));
+
+resetIdleTimer();

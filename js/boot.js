@@ -34,16 +34,16 @@
       try {
         const d  = JSON.parse(raw);
         const id = `migrated_${i}`;
-        localStorage.setItem(SLOT_KEY(id), raw);
+        safeSetItem(SLOT_KEY(id), raw);
         list.push({ id, title: d.title || `Wheel ${i}` });
       } catch {}
     }
     if (!list.length) {
       const id = newSlotId();
       list.push({ id, title: "Default" });
-      localStorage.setItem(SLOT_KEY(id), JSON.stringify(defaultSlotData()));
+      safeSetItem(SLOT_KEY(id), JSON.stringify(defaultSlotData()));
     }
-    localStorage.setItem(WHEEL_LIST_KEY, JSON.stringify(list));
+    safeSetItem(WHEEL_LIST_KEY, JSON.stringify(list));
   }
 
   wheelList = list;
