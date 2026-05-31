@@ -45,11 +45,10 @@
       <button class="bulk-btn danger" id="clearBtn"    title="Remove all entrants from this wheel"><img src="icons/trash-2.svg" class="btn-icon" alt=""></button>
     </div>
     <div class="entrant-section">
+      <input id="nameInput" class="entrant-add-input" placeholder="+ Entrant  or  Entrant, weight" name="bw-entrant-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-autocomplete="none" readonly onfocus="this.removeAttribute('readonly')" />
       <div class="entrant-scroll-wrap">
         <div class="scroll-fade top"    id="topFade">   <div class="scroll-indicator">▲</div></div>
-        <div class="entrant-list"       id="entrantList">
-          <input id="nameInput" class="entrant-add-input" placeholder="+ Entrant  or  Entrant, weight" name="bw-entrant-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-autocomplete="none" readonly onfocus="this.removeAttribute('readonly')" />
-        </div>
+        <div class="entrant-list"       id="entrantList"></div>
         <div class="scroll-fade bottom" id="bottomFade"><div class="scroll-indicator">▼</div></div>
       </div>
     </div>

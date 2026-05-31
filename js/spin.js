@@ -214,7 +214,7 @@ function doNobodyWins() {
     if (t < 1) { requestAnimationFrame(blastSpin); return; }
 
     setEmoji("nobody");
-    winnerTitle.textContent = "💥 UH OH, IT'S BROKEN! 💥";
+    winnerTitle.textContent = "UH OH, IT'S BROKEN!";
     winnerTitle.classList.add("bad");
     winnerBox.classList.add("exploded");
     winnerName.style.fontSize = "36px";

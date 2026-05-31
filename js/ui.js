@@ -248,10 +248,6 @@ function deleteWheel(id) {
 
 // ── Entrant list ──────────────────────────────────────────────
 function renderEntrants() {
-  // Save the add-input reference before innerHTML wipes it.
-  // Setting innerHTML="" detaches the element but the JS object (and its
-  // event listeners) survive; we re-append it as the last child below.
-  const addInput = document.getElementById("nameInput");
   entrantListEl.innerHTML = "";
   entrants.forEach((entrant, index) => {
     const row = document.createElement("div");
@@ -308,7 +304,6 @@ function renderEntrants() {
     row.appendChild(nameInput); row.appendChild(ctrl); row.appendChild(removeBtn);
     entrantListEl.appendChild(row);
   });
-  if (addInput) entrantListEl.appendChild(addInput);
   requestAnimationFrame(updateScrollFades);
 }
 
@@ -344,13 +339,13 @@ function addEntrant() {
   const input = document.getElementById("nameInput");
   const raw   = input.value.trim();
   if (!raw) return;
-  entrants.push(parseEntrantInput(raw));
+  entrants.unshift(parseEntrantInput(raw)); // newest at the top, pushing older down
   saveEntrants(); renderEntrants(); updateStats(); resetWheelState();
   input.value = "";
   input.focus();
-  // Scroll the list down so the newly added row is visible just above the input.
+  // Scroll the list to the top so the just-added row is visible below the input.
   requestAnimationFrame(() => {
-    entrantListEl.scrollTop = entrantListEl.scrollHeight;
+    entrantListEl.scrollTop = 0;
     updateScrollFades();
   });
 }
@@ -911,51 +906,54 @@ rawDataFileInput.onchange = async () => {
 
 // ── Sidebar toggle ────────────────────────────────────────────
 // wheelSnap holds the frozen-canvas <img> while a sidebar transition is
-// running. Kept module-level so a rapid double-click can clean it up.
-let wheelSnap = null;
+// running; panelTrackId is the rAF loop that keeps the emoji, pointer, and
+// winner overlay locked to the wheel during the animation. Both are
+// module-level so a rapid re-click can clean up the in-progress toggle.
+let wheelSnap    = null;
+let panelTrackId = null;
 
 panelToggle.onclick = () => {
-  // ── Freeze wheel panel ──────────────────────────────────────
-  // Clean up any previous snap from a rapid re-click.
+  // ── Clean up any in-progress toggle from a rapid re-click ───
+  if (panelTrackId !== null) { cancelAnimationFrame(panelTrackId); panelTrackId = null; }
   if (wheelSnap) {
     wheelSnap.remove();
     wheelSnap = null;
-    canvas.style.opacity     = "";
-    wheelEmoji.style.opacity = "";
-    pointer.style.opacity    = "";
+    canvas.style.opacity    = "";
+    canvas.style.transition = "";
   }
 
-  // Snapshot the current canvas content into an <img> that covers the
-  // entire wheel panel. This stays visible and stable while the grid
-  // animates, hiding the stretched live canvas, displaced emoji, and
-  // mis-positioned pointer.
-  // Capture CSS dimensions before any layout change happens.
+  // ── Freeze the wheel slices ─────────────────────────────────
+  // Only the canvas (the coloured slices) is snapshotted. The emoji and
+  // pointer are separate DOM elements drawn ABOVE the canvas; instead of
+  // hiding them we keep them visible and reposition them every frame (below)
+  // so they shift in lockstep with the frozen wheel. The live canvas, by
+  // contrast, would stretch into an oval as its CSS box resizes, so it's
+  // hidden behind a fixed-size snapshot.
   const snapRect = canvas.getBoundingClientRect();
-  const snapW    = snapRect.width;
-  const snapH    = snapRect.height;
-
   wheelSnap     = document.createElement("img");
   wheelSnap.src = canvas.toDataURL();
-  // Fixed pixel size + centered: the snapshot stays the same visual size
-  // throughout the animation while the panel grows/shrinks around it.
-  // No object-fit stretching, no oval distortion.
   Object.assign(wheelSnap.style, {
     position:      "absolute",
     top:           "50%",
     left:          "50%",
     transform:     "translate(-50%, -50%)",
-    width:         snapW + "px",
-    height:        snapH + "px",
-    zIndex:        "6",   // above canvas (z-index:5), below title/overlays
+    width:         snapRect.width  + "px",
+    height:        snapRect.height + "px",
+    zIndex:        "6",   // above canvas (z-index:5), below emoji/pointer/title
     pointerEvents: "none",
     opacity:       "1",
   });
   wheelWrap.appendChild(wheelSnap);
+  canvas.style.opacity = "0"; // hide the live (about-to-stretch) canvas only
 
-  // Hide the live elements instantly — they'll fade back in after resize.
-  canvas.style.opacity     = "0";
-  wheelEmoji.style.opacity = "0";
-  pointer.style.opacity    = "0";
+  // Capture the emoji/pointer offsets from the wheel-panel centre NOW, while
+  // geometry is still valid. wheelCX/CY/Radius are the live values set by the
+  // last resizeCanvas(); the snapshot freezes the wheel at this size.
+  const origRect  = wheelWrap.getBoundingClientRect();
+  const emojiDX   = wheelCX - origRect.width  / 2;
+  const emojiDY   = wheelCY - origRect.height / 2;
+  const pointerDX = (wheelCX + wheelRadius - 20) - origRect.width  / 2;
+  const pointerDY = wheelCY - origRect.height / 2;
 
   // ── Animate sidebar ─────────────────────────────────────────
   sidebarVisible = !sidebarVisible;
@@ -971,34 +969,54 @@ panelToggle.onclick = () => {
     panelToggle.title     = "Hide panel";
   }
 
+  // ── Track the wheel every frame during the animation ────────
+  // The panel resizes for the whole 0.4s transition. Re-pin the emoji and
+  // pointer (and the body-parented winner overlay) to the frozen-size wheel
+  // centred in the live panel so they all move in lockstep with the snapshot.
+  // Only `left`/`top` are touched, so the emoji's keyframe animations (which
+  // drive `transform`) keep running untouched.
+  const track = () => {
+    const r  = wheelWrap.getBoundingClientRect();
+    const cx = r.width  / 2;
+    const cy = r.height / 2;
+    wheelEmoji.style.left = (cx + emojiDX)   + "px";
+    wheelEmoji.style.top  = (cy + emojiDY)   + "px";
+    pointer.style.left    = (cx + pointerDX) + "px";
+    pointer.style.top     = (cy + pointerDY) + "px";
+    // Re-fit the title to the panel's current width so a long title grows /
+    // shrinks fluidly during the animation instead of snapping at the end.
+    fitWheelTitle();
+    if (winnerShowing) syncOverlayToWheelPanel(nobodyWinsActive);
+    panelTrackId = requestAnimationFrame(track);
+  };
+  panelTrackId = requestAnimationFrame(track);
+
   // ── Restore wheel panel ─────────────────────────────────────
   sidebarWrapper.addEventListener("transitionend", function onDone() {
     sidebarWrapper.removeEventListener("transitionend", onDone);
+    if (panelTrackId !== null) { cancelAnimationFrame(panelTrackId); panelTrackId = null; }
 
-    // Recompute canvas size and redraw at the new dimensions.
+    // Recompute canvas size + redraw, and reposition emoji/pointer for the
+    // final dimensions (they were tracking the frozen size until now).
     resizeCanvas();
 
-    // Crossfade: snapshot out, live elements in.
+    // resizeCanvas() re-syncs the overlay with the default (non-exploded)
+    // layout; re-apply the correct layout if a winner box is showing.
+    if (winnerShowing) syncOverlayToWheelPanel(nobodyWinsActive);
+
+    // Crossfade the snapshot out and the freshly-redrawn live canvas in.
+    // The emoji and pointer were never hidden, so they need no fade.
     const FADE = "opacity 0.2s ease";
     const snap = wheelSnap; // capture ref in case of re-click during fade
     if (snap) snap.style.transition = FADE;
-    canvas.style.transition     = FADE;
-    wheelEmoji.style.transition = FADE;
-    pointer.style.transition    = FADE;
-
+    canvas.style.transition = FADE;
     if (snap) snap.style.opacity = "0";
-    canvas.style.opacity         = "1";
-    wheelEmoji.style.opacity     = "1";
-    pointer.style.opacity        = "1";
+    canvas.style.opacity = "1";
 
     setTimeout(() => {
       if (snap) { snap.remove(); if (wheelSnap === snap) wheelSnap = null; }
-      canvas.style.transition     = "";
-      wheelEmoji.style.transition = "";
-      pointer.style.transition    = "";
-      canvas.style.opacity        = "";
-      wheelEmoji.style.opacity    = "";
-      pointer.style.opacity       = "";
+      canvas.style.transition = "";
+      canvas.style.opacity    = "";
     }, 250);
   });
 };

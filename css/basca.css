@@ -322,6 +322,7 @@ button:hover { transform: translateY(-1px); }
 /* Add-new input pinned at the bottom of .entrant-section */
 .entrant-add-input {
   flex-shrink: 0;
+  margin-bottom: 6px; /* separates the pinned input from the scrolling list below */
   background: rgba(255,255,255,0.04) !important; /* overrides global input rule */
   border: 1px dashed rgba(255,255,255,0.18);
   border-radius: 10px;
@@ -722,7 +723,10 @@ canvas {
   padding-top: 8%;
   pointer-events: none;
   opacity: 0;
-  transition: 0.4s ease;
+  /* Only fade opacity. A bare `0.4s ease` shorthand would also ease the
+     left/top/width/height/padding that syncOverlayToWheelPanel() sets each
+     frame, making the box lag behind the wheel during the sidebar animation. */
+  transition: opacity 0.4s ease;
   z-index: 100;
 }
 .winner-overlay.show { opacity: 1; }
