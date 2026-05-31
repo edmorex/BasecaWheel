@@ -61,6 +61,15 @@ requestAnimationFrame(() => {
 
 resizeCanvas();
 
+// First-load layout race: on a cold load (notably Chrome) the grid/panel
+// hasn't fully resolved when the synchronous resizeCanvas() above runs, so
+// wheelWrap.getBoundingClientRect() can report stale dimensions and the wheel
+// emoji/pointer end up positioned off-centre until the next resize or spin.
+// Re-measure once the first paint has settled, and again after full load
+// (fonts/images applied). Both are no-ops when the dimensions are unchanged.
+requestAnimationFrame(() => requestAnimationFrame(resizeCanvas));
+window.addEventListener("load", resizeCanvas);
+
 // ── Image pre-caching ─────────────────────────────────────────
 // Fire-and-forget: asks the browser to fetch every variant image so
 // they're in cache before the wheel first spins to that state.
