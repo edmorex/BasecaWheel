@@ -30,6 +30,32 @@ body.anim-paused *,
 body.anim-paused *::before,
 body.anim-paused *::after { animation-play-state: paused !important; }
 
+/* ── Reduced effects ──
+   Global, device-level toggle (Features menu) for low-end GPUs — notably
+   Firefox on Windows, where backdrop-filter, filter: blur(), mix-blend-mode,
+   and per-frame drop-shadow re-rasterization are far costlier than on macOS.
+   Because the idle rotation redraws the canvas every frame, these effects
+   recomposite continuously. This strips them while keeping the layout and the
+   cheap (transform/opacity) animations like the wheel spin and flame flicker. */
+body.reduced-effects .panel {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+/* Flames: keep the soft gradient + cheap scaleY flicker; drop blur and blend. */
+body.reduced-effects .wheel-wrap::before,
+body.reduced-effects .wheel-wrap::after {
+  filter: none;
+  mix-blend-mode: normal;
+}
+/* Drop shadows that get re-rasterized every frame (the canvas redraws each
+   idle frame; the emoji/pointer animate). */
+body.reduced-effects canvas,
+body.reduced-effects .wheel-emoji,
+body.reduced-effects .pointer { filter: none; }
+/* Stop the continuous shadow-glow animations — static base shadows remain. */
+body.reduced-effects .wheel-title-text.visible { animation: none; }
+body.reduced-effects .winner-heart-wrap { animation: winnerPop 0.7s ease !important; }
+
 body {
   margin: 0;
   padding: 20px;

@@ -1063,6 +1063,28 @@ muteBtn.onclick = () => {
   }
 };
 
+// ── Reduced effects (global device preference) ────────────────
+// Unlike the per-wheel feature toggles, this is a device/GPU preference: it's
+// stored GLOBALLY (its own localStorage key, not in per-wheel settings, so it
+// isn't exported with wheel JSON or flipped when switching wheels). Toggling it
+// adds body.reduced-effects, which strips the costly backdrop-filter / blur /
+// blend / per-frame drop-shadow effects for low-end GPUs (e.g. Firefox/Windows).
+const REDUCED_FX_KEY  = "basca_reduced_effects";
+const reducedFxToggle = document.getElementById("reducedEffects");
+
+function applyReducedEffects(on) {
+  document.body.classList.toggle("reduced-effects", on);
+}
+
+const reducedFxOn = localStorage.getItem(REDUCED_FX_KEY) === "1";
+reducedFxToggle.checked = reducedFxOn;
+applyReducedEffects(reducedFxOn);
+
+reducedFxToggle.addEventListener("change", () => {
+  applyReducedEffects(reducedFxToggle.checked);
+  safeSetItem(REDUCED_FX_KEY, reducedFxToggle.checked ? "1" : "0");
+});
+
 // ── Section divider (wheels ↔ entrants) ──────────────────────
 // Persists the wheel-list height in localStorage so the split is
 // remembered across page reloads.
