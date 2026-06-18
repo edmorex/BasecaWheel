@@ -185,20 +185,13 @@ function renderWheelList() {
     row.appendChild(deleteBtn);
     wheelListEl.appendChild(row);
   });
-
-  const addInline = document.createElement("div");
-  addInline.className   = "wheel-add-inline";
-  addInline.textContent = "— Add Wheel —";
-  addInline.onclick     = () => addWheel("");
-  wheelListEl.appendChild(addInline);
-
   requestAnimationFrame(updateWheelScrollFades);
 }
 
 function addWheel(title) {
   const id       = newSlotId();
   const newTitle = title.trim() || `Wheel ${wheelList.length + 1}`;
-  wheelList.push({ id, title: newTitle });
+  wheelList.unshift({ id, title: newTitle }); // newest at the top, pushing older down
   safeSetItem(SLOT_KEY(id), JSON.stringify({
     title:    newTitle,
     entrants: JSON.parse(JSON.stringify(DEFAULT_ENTRANTS)),
@@ -207,7 +200,7 @@ function addWheel(title) {
   saveWheelList();
   saveCurrentSlot();
   activateSlot(id);
-  wheelListEl.scrollTop = wheelListEl.scrollHeight;
+  wheelListEl.scrollTop = 0; // show the just-added row at the top
 }
 
 function cloneWheel(sourceId) {
@@ -216,12 +209,12 @@ function cloneWheel(sourceId) {
   const id       = newSlotId();
   const newTitle = source.title ? source.title + " (copy)" : "Copy";
   const srcData  = loadSlotData(sourceId);
-  wheelList.push({ id, title: newTitle });
+  wheelList.unshift({ id, title: newTitle }); // newest at the top
   safeSetItem(SLOT_KEY(id), JSON.stringify({ ...srcData, title: newTitle }));
   saveWheelList();
   saveCurrentSlot();
   activateSlot(id);
-  wheelListEl.scrollTop = wheelListEl.scrollHeight;
+  wheelListEl.scrollTop = 0;
 }
 
 function deleteWheel(id) {
@@ -831,6 +824,8 @@ document.getElementById("clearBtn").onclick = () => {
 
 document.getElementById("cloneActiveWheelBtn").onclick = () => cloneWheel(activeSlot);
 
+document.getElementById("wheelAddInline").onclick = () => addWheel("");
+
 document.getElementById("clearWheelsBtn").onclick = () => {
   confirmDialog("Delete all wheels and start fresh with one empty wheel?", () => {
     wheelList.forEach(w => localStorage.removeItem(SLOT_KEY(w.id)));
@@ -1089,13 +1084,14 @@ reducedFxToggle.addEventListener("change", () => {
 // Persists the wheel-list height in localStorage so the split is
 // remembered across page reloads.
 const DIVIDER_KEY = "basca_divider_h";
-const DIVIDER_MIN = 42; // px — room for at least one row
+const DIVIDER_MIN = 70; // px — room for at least ~1.5 wheel rows (matches .wheel-list-scroll min-height)
 
 function applyDividerHeight(h) {
-  wheelListEl.style.height = h + "px";
+  wheelListEl.style.height = Math.max(DIVIDER_MIN, h) + "px";
 }
 
-// Restore saved height (falls back to 110 — the CSS default).
+// Restore saved height (falls back to 110 — the CSS default), clamped to the
+// minimum so an old saved value below 1.5 rows can't slip through.
 applyDividerHeight(parseInt(localStorage.getItem(DIVIDER_KEY)) || 110);
 
 (function initDivider() {

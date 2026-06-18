@@ -177,9 +177,11 @@ body.resizing-v * { cursor: ns-resize !important; user-select: none !important; 
 }
 
 .wheel-list-scroll {
-  /* Fixed height — shows ~2.5 wheel rows so Entrants section stays at a
-     stable Y even as wheels are added/removed. Each row ≈ 42px + 6px gap. */
+  /* Default height; the Wheels/Entrants divider overrides this inline. Each
+     row ≈ 42px + 6px gap. min-height keeps at least ~1.5 rows visible so the
+     list can never be dragged smaller than that (matches DIVIDER_MIN in ui.js). */
   height: 110px;
+  min-height: 70px;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
@@ -230,17 +232,22 @@ body.resizing-v * { cursor: ns-resize !important; user-select: none !important; 
 .wheel-add-inline {
   text-align: center;
   font-size: 12px;
-  letter-spacing: 1px;
-  color: rgba(255,255,255,0.3);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  background: rgba(34,197,94,0.10);
+  border: 1px dashed rgba(34,197,94,0.5);
   cursor: pointer;
-  padding: 5px 8px;
+  padding: 6px 8px;
+  margin-bottom: 6px; /* separates the pinned button from the scrolling list below */
   border-radius: 8px;
   user-select: none;
-  transition: color 0.15s, background 0.15s;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
 .wheel-add-inline:hover {
-  color: rgba(255,255,255,0.8);
-  background: rgba(255,255,255,0.06);
+  color: #fff;
+  background: rgba(34,197,94,0.28);
+  border-color: rgba(34,197,94,0.85);
 }
 
 .wheel-title-edit {
@@ -349,8 +356,8 @@ button:hover { transform: translateY(-1px); }
 .entrant-add-input {
   flex-shrink: 0;
   margin-bottom: 6px; /* separates the pinned input from the scrolling list below */
-  background: rgba(255,255,255,0.04) !important; /* overrides global input rule */
-  border: 1px dashed rgba(255,255,255,0.18);
+  background: rgba(34,197,94,0.08) !important; /* green tint; overrides global input rule */
+  border: 1px dashed rgba(34,197,94,0.5);
   border-radius: 10px;
   padding: 9px 12px;
   color: white;
@@ -360,11 +367,11 @@ button:hover { transform: translateY(-1px); }
 }
 .entrant-add-input:focus {
   outline: none;
-  background: rgba(255,255,255,0.08) !important;
+  background: rgba(34,197,94,0.14) !important;
   border-color: var(--accent);
   border-style: solid;
 }
-.entrant-add-input::placeholder { opacity: 0.35; }
+.entrant-add-input::placeholder { color: var(--accent); opacity: 0.6; }
 
 .entrant-scroll-wrap {
   position: relative;
