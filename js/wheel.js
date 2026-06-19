@@ -102,6 +102,7 @@ function resizeCanvas() {
   wheelEmoji.style.height   = emojiPx + "px";
   fitWheelTitle();
   syncOverlayToWheelPanel();
+  renderWheelCache(); // geometry changed — rebuild the cached face at the new size
   drawWheel();
 }
 
@@ -163,53 +164,90 @@ function pointerNearSliceEdge(rotation) {
   return false;
 }
 
-// ── Draw ──────────────────────────────────────────────────��───
-function drawWheel(rotation = currentRotation) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+// ── Draw ──────────────────────────────────────────────────────
+// The wheel face (slices + labels) only changes when entrants, weights,
+// percentages, or the nobody-wins state change — NOT while it spins. So it's
+// rendered once into an offscreen canvas (renderWheelCache) and each animation
+// frame is just a clear + rotate + drawImage of that bitmap. That turns the
+// per-frame cost from "N arc fills + N strokes + N fillText" into a single
+// GPU-accelerated blit, keeping full-speed spins smooth even with many
+// entrants.
+//
+// CACHE INVALIDATION — every place that mutates the face must call
+// renderWheelCache(): resizeCanvas() (this file, geometry), resetWheelState()
+// (ui.js, covers add/remove/rename/weight/clear/shuffle/wheel-switch),
+// randomSwap() + doNobodyWins() (spin.js, mid-spin face changes),
+// dismissWinner() (ui.js, names return / post-auto-feature entrants), and the
+// hidePercentages toggle (ui.js).
+let wheelCache    = null; // offscreen <canvas>
+let wheelCacheCtx = null;
+
+function renderWheelCache() {
+  if (!wheelCache) {
+    wheelCache    = document.createElement("canvas");
+    wheelCacheCtx = wheelCache.getContext("2d");
+  }
+  if (wheelCache.width !== canvas.width || wheelCache.height !== canvas.height) {
+    wheelCache.width  = canvas.width;
+    wheelCache.height = canvas.height;
+  }
+  const c  = wheelCacheCtx;
   const cx = wheelCX;
   const cy = wheelCY;
+  c.clearRect(0, 0, wheelCache.width, wheelCache.height);
 
   if (!entrants.length) {
-    ctx.beginPath();
-    ctx.arc(cx, cy, wheelRadius, 0, Math.PI * 2);
-    ctx.fillStyle = "#334155";
-    ctx.fill();
+    c.beginPath();
+    c.arc(cx, cy, wheelRadius, 0, Math.PI * 2);
+    c.fillStyle = "#334155";
+    c.fill();
     return;
   }
 
   const total      = totalWeight();
-  let   startAngle = rotation;
+  let   startAngle = 0; // face is cached at rotation 0; drawWheel() rotates it
 
   entrants.forEach((e, i) => {
     const slice    = e.weight / total * Math.PI * 2;
     const endAngle = startAngle + slice;
 
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, wheelRadius, startAngle, endAngle);
-    ctx.closePath();
-    ctx.fillStyle   = COLORS[i % COLORS.length];
-    ctx.fill();
-    ctx.lineWidth   = 4;
-    ctx.strokeStyle = "#0f172a";
-    ctx.stroke();
+    c.beginPath();
+    c.moveTo(cx, cy);
+    c.arc(cx, cy, wheelRadius, startAngle, endAngle);
+    c.closePath();
+    c.fillStyle   = COLORS[i % COLORS.length];
+    c.fill();
+    c.lineWidth   = 4;
+    c.strokeStyle = "#0f172a";
+    c.stroke();
 
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(startAngle + slice / 2);
-    ctx.fillStyle = "white";
-    ctx.font      = `bold ${Math.max(12, wheelRadius * 0.045)}px Arial`;
-    ctx.textAlign = "right";
-    const label   = nobodyWinsActive
+    c.save();
+    c.translate(cx, cy);
+    c.rotate(startAngle + slice / 2);
+    c.fillStyle = "white";
+    c.font      = `bold ${Math.max(12, wheelRadius * 0.045)}px Arial`;
+    c.textAlign = "right";
+    const label = nobodyWinsActive
       ? "Nobody"
       : settings.hidePercentages
         ? e.name
         : `${e.name} (${(e.weight / total * 100).toFixed(1)}%)`;
-    ctx.fillText(label, wheelRadius - 20, 8);
-    ctx.restore();
+    c.fillText(label, wheelRadius - 20, 8);
+    c.restore();
 
     startAngle = endAngle;
   });
+}
+
+function drawWheel(rotation = currentRotation) {
+  if (!wheelCache) renderWheelCache(); // safety: ensure the cache exists
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!wheelCache.width || !wheelCache.height) return; // not sized yet (pre first resize)
+  ctx.save();
+  ctx.translate(wheelCX, wheelCY);
+  ctx.rotate(rotation);
+  ctx.drawImage(wheelCache, -wheelCX, -wheelCY);
+  ctx.restore();
 }
 
 // ── Pointer tick ────────────────��─────────────────────────────

@@ -317,6 +317,7 @@ function resetWheelState() {
   prevTickRotation = null;
   setEmoji("idle");
   winnerOverlay.classList.remove("show");
+  renderWheelCache(); // entrants/weights/state may have changed — rebuild the face
   drawWheel();
   startIdleRotation();
 }
@@ -350,6 +351,11 @@ function dismissWinner() {
   stopConfettiBursts();
   winnerOverlay.classList.remove("show");
   setEmoji("idle");
+  // Rebuild the face: "Nobody" labels revert to names, and auto-features
+  // (remove/decrement winner, etc.) may have changed entrants while the
+  // winner overlay was up.
+  renderWheelCache();
+  drawWheel();
   startIdleRotation();
 }
 
@@ -410,6 +416,9 @@ Object.keys(SETTINGS_DEFAULTS).forEach(k => {
         }
       });
     }
+    // Hide/Show Percentages changes the slice labels — rebuild the cached face
+    // so the running idle/spin draw picks it up immediately.
+    if (k === "hidePercentages") { renderWheelCache(); drawWheel(); }
     saveCurrentSlot();
   });
 });

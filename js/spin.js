@@ -190,11 +190,13 @@ function randomSwap() {
   do { b = Math.floor(Math.random() * entrants.length); } while (b === a);
   [entrants[a], entrants[b]] = [entrants[b], entrants[a]];
   renderEntrants(); saveEntrants();
+  renderWheelCache(); // slice order/labels changed mid-spin — refresh the cached face
 }
 
 // ── Nobody wins ───────────────────────────────────────────────
 function doNobodyWins() {
   nobodyWinsActive = true;
+  renderWheelCache(); // labels become "Nobody" — refresh before the blast spin
   fadeBgOut(600);
   playSound("explode");
   // Fire explosion in sync with the sound — the wheel keeps spinning
