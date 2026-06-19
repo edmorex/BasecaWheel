@@ -41,11 +41,15 @@ body.reduced-effects .panel {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
-/* Flames: keep the soft gradient + cheap scaleY flicker; drop blur and blend. */
+/* Flames: drop blur + blend, and freeze the flicker to a static gradient.
+   The scaleY keyframes force the (likely un-layerized) multi-gradient fill to
+   repaint every frame on weak GPUs — and they flicker *faster* during a spin,
+   so making them static helps full-speed spins too, not just idle. */
 body.reduced-effects .wheel-wrap::before,
 body.reduced-effects .wheel-wrap::after {
   filter: none;
   mix-blend-mode: normal;
+  animation: none;
 }
 /* Drop shadows that get re-rasterized every frame (the canvas redraws each
    idle frame; the emoji/pointer animate). */
