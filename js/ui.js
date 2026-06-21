@@ -75,8 +75,9 @@ function stopDragScroll() {
 function renderWheelList() {
   wheelListEl.innerHTML = "";
   wheelList.forEach((wheel, idx) => {
+    const isActive = wheel.id === activeSlot;
     const row = document.createElement("div");
-    row.className = "wheel-row" + (wheel.id === activeSlot ? " active-wheel" : "");
+    row.className = "wheel-row" + (isActive ? " active-wheel" : "");
     row.draggable = true;
 
     // ── Drag-and-drop ────────────────────────────────────────
@@ -134,6 +135,10 @@ function renderWheelList() {
     handle.textContent = "⠿";
 
     // ── Title input ──────────────────────────────────────────
+    // Only the ACTIVE wheel's title is editable. For inactive wheels the input
+    // is display-only with pointer-events disabled, so a click falls through to
+    // the row's click handler and selects the wheel instead of editing it.
+    // (To rename an inactive wheel: click to select it, then click again.)
     const titleInput       = document.createElement("input");
     titleInput.type           = "text";
     titleInput.name           = "bw-wheel-title-row";
@@ -143,25 +148,23 @@ function renderWheelList() {
     titleInput.readOnly       = true; // Safari contact-autofill suppression
     titleInput.setAttribute("autocorrect",       "off");
     titleInput.setAttribute("aria-autocomplete", "none");
-    titleInput.addEventListener("focus", () => { titleInput.readOnly = false; }, { once: true });
     titleInput.className   = "wheel-title-edit";
     titleInput.value       = wheel.title;
     titleInput.placeholder = "Wheel title…";
-    titleInput.oninput     = () => {
-      wheel.title = titleInput.value;
-      saveWheelList();
-      if (wheel.id === activeSlot) {
-        slotTitle = wheel.title;
+
+    if (isActive) {
+      titleInput.addEventListener("focus", () => { titleInput.readOnly = false; }, { once: true });
+      titleInput.oninput = () => {
+        wheel.title = titleInput.value;
+        slotTitle   = wheel.title;
         updateWheelTitle();
+        saveWheelList();
         saveCurrentSlot();
-      } else {
-        // Persist the new title into the slot's own storage entry so that
-        // loadSlotData() returns the correct title when this wheel is activated.
-        const slotData = loadSlotData(wheel.id);
-        slotData.title = wheel.title;
-        safeSetItem(SLOT_KEY(wheel.id), JSON.stringify(slotData));
-      }
-    };
+      };
+    } else {
+      // Not editable until selected — let the click reach the row.
+      titleInput.style.pointerEvents = "none";
+    }
 
     // ── Delete button ─────────────────────────────────────────
     const deleteBtn       = document.createElement("button");
@@ -240,13 +243,92 @@ function deleteWheel(id) {
 }
 
 // ── Entrant list ──────────────────────────────────────────────
+// Drag-to-reorder, mirroring the wheel list (see startDragScroll above). A
+// separate src-index + auto-scroll loop keeps the two lists independent;
+// dragLastY (the global document dragover tracker) is shared.
+let entrantDragSrcIdx   = null;
+let entrantDragScrollId = null;
+
+function startEntrantDragScroll() {
+  const ZONE  = 36;
+  const SPEED = 10;
+  function loop() {
+    if (entrantDragSrcIdx === null) { entrantDragScrollId = null; return; }
+    const rect = entrantListEl.getBoundingClientRect();
+    const relY = dragLastY - rect.top;
+    if (relY < ZONE) {
+      entrantListEl.scrollTop -= Math.ceil(SPEED * (1 - relY / ZONE));
+    } else if (relY > rect.height - ZONE) {
+      entrantListEl.scrollTop += Math.ceil(SPEED * (1 - (rect.height - relY) / ZONE));
+    }
+    entrantDragScrollId = requestAnimationFrame(loop);
+  }
+  if (entrantDragScrollId === null) entrantDragScrollId = requestAnimationFrame(loop);
+}
+
+function stopEntrantDragScroll() {
+  if (entrantDragScrollId !== null) { cancelAnimationFrame(entrantDragScrollId); entrantDragScrollId = null; }
+}
+
 function renderEntrants() {
   entrantListEl.innerHTML = "";
   entrants.forEach((entrant, index) => {
     const row = document.createElement("div");
     row.className = "entrant";
+    row.draggable = true;
 
+    // ── Drag-and-drop reorder ────────────────────────────────
+    row.addEventListener("dragstart", e => {
+      entrantDragSrcIdx = index;
+      e.dataTransfer.effectAllowed = "move";
+      setTimeout(() => row.classList.add("dragging"), 0);
+      startEntrantDragScroll();
+    });
+    row.addEventListener("dragend", () => {
+      entrantDragSrcIdx = null;
+      stopEntrantDragScroll();
+      row.classList.remove("dragging");
+      entrantListEl.querySelectorAll(".entrant").forEach(r =>
+        r.classList.remove("drag-over-top", "drag-over-bottom")
+      );
+    });
+    row.addEventListener("dragover", e => {
+      e.preventDefault();
+      if (entrantDragSrcIdx === null || entrantDragSrcIdx === index) return;
+      const mid   = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
+      const isTop = e.clientY < mid;
+      entrantListEl.querySelectorAll(".entrant").forEach(r =>
+        r.classList.remove("drag-over-top", "drag-over-bottom")
+      );
+      row.classList.add(isTop ? "drag-over-top" : "drag-over-bottom");
+    });
+    row.addEventListener("dragleave", () => {
+      row.classList.remove("drag-over-top", "drag-over-bottom");
+    });
+    row.addEventListener("drop", e => {
+      e.preventDefault();
+      stopEntrantDragScroll();
+      if (entrantDragSrcIdx === null || entrantDragSrcIdx === index) return;
+      const mid   = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
+      const isTop = e.clientY < mid;
+      let target  = isTop ? index : index + 1;
+      if (entrantDragSrcIdx < target) target--; // account for the spliced-out element
+      const [moved] = entrants.splice(entrantDragSrcIdx, 1);
+      entrants.splice(target, 0, moved);
+      entrantDragSrcIdx = null;
+      saveEntrants();
+      renderEntrants();
+      resetWheelState(); // order changed → rebuild the wheel face
+    });
+
+    // ── Drag handle ──────────────────────────────────────────
+    const handle = document.createElement("span");
+    handle.className   = "entrant-drag-handle";
+    handle.textContent = "⠿";
+
+    // ── Name (underline edit, like the wheel title) ──────────
     const nameInput       = document.createElement("input");
+    nameInput.className      = "entrant-name-edit";
     nameInput.value          = entrant.name;
     nameInput.maxLength      = 256;
     nameInput.name           = "bw-entrant-row";
@@ -268,6 +350,7 @@ function renderEntrants() {
     plus.className  = "weight-btn"; plus.innerHTML  = '<img src="icons/circle-plus.svg"  class="btn-icon" alt="">';
     const wInput = document.createElement("input");
     wInput.type = "number"; wInput.className = "weight-input"; wInput.value = entrant.weight;
+    wInput.max  = 999;
 
     minus.onclick = () => {
       entrant.weight = Math.max(1, entrant.weight - 1);
@@ -275,12 +358,12 @@ function renderEntrants() {
       saveEntrants(); updateStats(); resetWheelState();
     };
     plus.onclick = () => {
-      entrant.weight++;
-      wInput.value = entrant.weight;
+      entrant.weight = Math.min(999, entrant.weight + 1); // cap at 3 digits
+      wInput.value   = entrant.weight;
       saveEntrants(); updateStats(); resetWheelState();
     };
     wInput.oninput = () => {
-      entrant.weight = Math.max(1, parseInt(wInput.value) || 1);
+      entrant.weight = Math.max(1, Math.min(999, parseInt(wInput.value) || 1));
       wInput.value   = entrant.weight;
       saveEntrants(); updateStats(); resetWheelState();
     };
@@ -294,7 +377,10 @@ function renderEntrants() {
       saveEntrants(); renderEntrants(); updateStats(); resetWheelState();
     };
 
-    row.appendChild(nameInput); row.appendChild(ctrl); row.appendChild(removeBtn);
+    row.appendChild(handle);
+    row.appendChild(nameInput);
+    row.appendChild(ctrl);
+    row.appendChild(removeBtn);
     entrantListEl.appendChild(row);
   });
   requestAnimationFrame(updateScrollFades);
