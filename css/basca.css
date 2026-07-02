@@ -199,7 +199,7 @@ body.resizing-v * { cursor: ns-resize !important; user-select: none !important; 
 
 .wheel-row {
   display: grid;
-  grid-template-columns: 20px 1fr 30px;
+  grid-template-columns: 20px 1fr auto auto;
   gap: 6px;
   align-items: center;
   background: rgba(255,255,255,0.05);
@@ -234,6 +234,16 @@ body.resizing-v * { cursor: ns-resize !important; user-select: none !important; 
 }
 .wheel-drag-handle:hover,
 .entrant-drag-handle:hover { opacity: 0.75; }
+
+/* Per-wheel settings (gear) button — solid, like the entrant weight buttons.
+   Uses the default button:hover translateY lift (no override). */
+.wheel-options-btn {
+  width: 28px; height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  background: #475569;
+  color: white;
+}
 
 .wheel-add-inline {
   text-align: center;
@@ -996,6 +1006,62 @@ canvas {
   flex-shrink: 0;
 }
 .settings-panel-header h3 { margin: 0; font-size: 16px; opacity: 1; letter-spacing: 0; text-transform: none; display: flex; align-items: center; gap: 6px; }
+/* Which wheel the Mischief menu is editing (shown right of the title) */
+.settings-subtitle {
+  font-size: 13px;
+  opacity: 0.6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 45%;
+  text-align: right;
+}
+/* Compact panel for the global settings menu (auto height, scrolls if tall) */
+.settings-panel-compact { height: auto; max-height: 85vh; width: min(560px, 94vw); }
+.global-settings-body { padding: 16px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+
+/* ── Bot / WebSocket integration (global settings) ── */
+.ws-conn-row { display: flex; align-items: center; gap: 8px; margin-top: 2px; flex-wrap: wrap; }
+.ws-conn-row button { min-width: 96px; }
+.ws-status { font-size: 12px; opacity: 0.7; }
+.ws-status.ok  { color: var(--accent); opacity: 1; }
+.ws-status.err { color: var(--danger); opacity: 1; }
+
+.ws-perm-grid {
+  display: grid;
+  grid-template-columns: auto repeat(6, 1fr);
+  gap: 5px 6px;
+  align-items: center;
+}
+.ws-perm-head {
+  text-align: center;
+  font-size: 10px;
+  opacity: 0.6;
+  white-space: nowrap;
+}
+.ws-perm-cmd {
+  font-weight: 700;
+  text-transform: capitalize;
+  font-size: 13px;
+  padding-right: 8px;
+}
+.ws-perm-cell { display: flex; justify-content: center; }
+.ws-perm-grid input[type="radio"] {
+  width: 15px; height: 15px;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+/* Radios used inline in feature-label rows (limit mode) */
+.settings-panel label.feature-label input[type="radio"] {
+  width: 16px; height: 16px;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
 .settings-close-btn {
   background: none;
   border: none;

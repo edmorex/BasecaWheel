@@ -5,7 +5,7 @@ import os
 import json
 import webbrowser
 
-PORT = 8080
+PORT = 8081
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 
 IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg")

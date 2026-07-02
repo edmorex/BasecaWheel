@@ -227,6 +227,7 @@ function doNobodyWins() {
     winnerShowing = true;
     wheelWrap.classList.add("flames-paused");
     setTimeout(() => { winnerName.style.fontSize = ""; }, 100);
+    if (typeof wsSendNobody === "function") wsSendNobody(); // announce to BasecaBot if connected
   }
   requestAnimationFrame(blastSpin);
 }
@@ -238,6 +239,7 @@ function spinWheel() {
   stopIdleRotation();
   initAudio().then(startBg);
   document.getElementById("settingsOverlay").classList.add("hidden");
+  document.getElementById("globalSettingsOverlay").classList.add("hidden");
 
   nobodyWinsActive = false;
   winnerShowing    = false;
@@ -443,6 +445,7 @@ function spinWheel() {
     playSound("fanfare");
     startConfettiBursts();
     addToHistory(winner.name);
+    if (typeof wsSendResult === "function") wsSendResult(winner.name); // announce to BasecaBot if connected
 
     // ── Auto-features ─────────────────────────────────────────
     // Apply weight/presence changes while the winner overlay is visible so

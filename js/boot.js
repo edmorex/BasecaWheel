@@ -84,11 +84,13 @@ function precacheImages() {
 
 precacheImages();
 
-// ── Settings close observer ───────────────────────────────────
-// Re-cache images/sounds and refresh the wheel emoji whenever the
-// settings overlay is hidden (e.g. the user saves a new image/sound URL).
+// ── Mischief settings close observer ──────────────────────────
+// When the per-wheel Mischief menu closes AND it was editing the active wheel,
+// re-cache images/sounds and refresh the wheel emoji (e.g. a new image/sound
+// URL was saved). Edits to a non-active wheel don't touch the active wheel's
+// live state, so nothing to refresh there.
 new MutationObserver(() => {
-  if (settingsOverlay.classList.contains("hidden")) {
+  if (settingsOverlay.classList.contains("hidden") && editingActive()) {
     precacheImages();
     if (audioCtx) reloadSounds();
     if (!spinning && !winnerShowing) setEmoji(currentEmojiState);

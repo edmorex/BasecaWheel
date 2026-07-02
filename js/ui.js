@@ -30,11 +30,13 @@
 // onclick handler here. Both are safe because handlers only fire after all
 // scripts have evaluated (guaranteed by the HTML <script> load order).
 
-// ── Local DOM ref ─────────────────────────────────────────────
-// settingsOverlay is used in several files. Declaring it here as a global
-// const (no 'var'/'let') so boot.js and spin.js can reference it too.
-// spin.js currently uses document.getElementById() inline, which is fine.
-const settingsOverlay = document.getElementById("settingsOverlay");
+// ── Local DOM refs ────────────────────────────────────────────
+// settingsOverlay is the per-wheel "Mischief Settings" modal (opened from each
+// wheel row's gear). globalSettingsOverlay is the app-wide settings modal
+// (opened from the bottom-left gear). Declared as globals (no 'var'/'let') so
+// boot.js and spin.js can reference them too.
+const settingsOverlay       = document.getElementById("settingsOverlay");
+const globalSettingsOverlay = document.getElementById("globalSettingsOverlay");
 
 // ── Wheel list ────────────────────────────────────────────────
 // dragSrcIdx  — list index of the row being dragged; null when idle.
@@ -154,7 +156,10 @@ function renderWheelList() {
 
     if (isActive) {
       titleInput.addEventListener("focus", () => { titleInput.readOnly = false; }, { once: true });
+      // Block edits (typing/paste/delete) while the wheel is spinning.
+      titleInput.addEventListener("beforeinput", e => { if (spinning) e.preventDefault(); });
       titleInput.oninput = () => {
+        if (spinning) { titleInput.value = wheel.title; return; } // safety net if beforeinput is unsupported
         wheel.title = titleInput.value;
         slotTitle   = wheel.title;
         updateWheelTitle();
@@ -165,6 +170,15 @@ function renderWheelList() {
       // Not editable until selected — let the click reach the row.
       titleInput.style.pointerEvents = "none";
     }
+
+    // ── Options (Mischief Settings) button ───────────────────
+    // Opens this wheel's per-wheel settings — works for non-active wheels too.
+    // stopPropagation so it doesn't also trigger the row's activate-on-click.
+    const optionsBtn       = document.createElement("button");
+    optionsBtn.className   = "wheel-options-btn";
+    optionsBtn.title       = "Wheel settings";
+    optionsBtn.innerHTML   = '<img src="icons/settings.svg" class="btn-icon" alt="">';
+    optionsBtn.onclick     = e => { e.stopPropagation(); openMischiefSettings(wheel.id); };
 
     // ── Delete button ─────────────────────────────────────────
     const deleteBtn       = document.createElement("button");
@@ -185,6 +199,7 @@ function renderWheelList() {
 
     row.appendChild(handle);
     row.appendChild(titleInput);
+    row.appendChild(optionsBtn);
     row.appendChild(deleteBtn);
     wheelListEl.appendChild(row);
   });
@@ -416,6 +431,7 @@ function parseEntrantInput(text) {
 }
 
 function addEntrant() {
+  if (spinning) return; // no adding mid-spin
   const input = document.getElementById("nameInput");
   const raw   = input.value.trim();
   if (!raw) return;
@@ -445,13 +461,64 @@ function dismissWinner() {
   startIdleRotation();
 }
 
-// ── Settings ──────────────────────────────────────────────────
+// ── Mischief (per-wheel) settings ─────────────────────────────
+// The Mischief menu edits ONE wheel at a time — the active wheel OR any other.
+// editSettings is the settings object currently being edited; editSlotId is its
+// wheel id. When editing the active wheel, editSettings === the live `settings`
+// object (so changes apply immediately and persist via saveCurrentSlot). When
+// editing a non-active wheel, editSettings is a detached copy loaded from that
+// slot's storage; only that slot's storage is written, and none of the active
+// wheel's live state (emoji variants, sounds, wheel-cache) is touched.
+let editSlotId   = null;
+let editSettings = SETTINGS_DEFAULTS; // placeholder until the menu first opens
+
+function editingActive() { return editSlotId === activeSlot; }
+
+function persistEditSettings() {
+  if (editingActive()) {
+    saveCurrentSlot();
+  } else {
+    const d = loadSlotData(editSlotId);
+    safeSetItem(SLOT_KEY(editSlotId), JSON.stringify({
+      title:    d.title,
+      entrants: d.entrants,
+      settings: editSettings,
+      history:  d.history,
+    }));
+  }
+}
+
+function openMischiefSettings(wheelId) {
+  if (winnerShowing) dismissWinner();
+  editSlotId = wheelId;
+  if (wheelId === activeSlot) {
+    editSettings = settings; // live object — activateSlot already seeded it
+  } else {
+    editSettings = loadSlotData(wheelId).settings;
+    // Seed customImages defaults so the UI lists them (mirrors
+    // initCustomImagesFromProbed, but on the detached editSettings).
+    if (!editSettings.customImages) editSettings.customImages = {};
+    Object.keys(EMOJI).forEach(state => {
+      if (DEFAULT_IMAGES[state]?.length > 0 && !Array.isArray(editSettings.customImages[state])) {
+        editSettings.customImages[state] = [...DEFAULT_IMAGES[state]];
+      }
+    });
+  }
+  const w = wheelList.find(x => x.id === wheelId);
+  document.getElementById("mischiefWheelName").textContent = w ? (w.title || "Untitled") : "";
+  applySettingsToInputs();
+  settingsOverlay.classList.remove("hidden");
+  renderImageSettings();
+  requestAnimationFrame(updateSettingsFades);
+}
+
 function applySettingsToInputs() {
   Object.keys(SETTINGS_DEFAULTS).forEach(k => {
     if (k === "customImages" || k === "customSounds") return;
     const el = document.getElementById(k);
-    if (el.type === "checkbox") el.checked = !!settings[k];
-    else                        el.value   = settings[k];
+    if (!el) return; // e.g. reducedEffects lives in the global menu, not here
+    if (el.type === "checkbox") el.checked = !!editSettings[k];
+    else                        el.value   = editSettings[k];
   });
   renderSoundSettings();
   renderImageSettings();
@@ -468,17 +535,18 @@ function updateSettingsFades() {
 
 document.getElementById("settingsPanelBody").addEventListener("scroll", updateSettingsFades);
 
-document.getElementById("settingsBtn").onclick = () => {
-  if (winnerShowing) dismissWinner();
-  settingsOverlay.classList.toggle("hidden");
-  if (!settingsOverlay.classList.contains("hidden")) {
-    renderImageSettings();
-    requestAnimationFrame(updateSettingsFades);
-  }
-};
-
 settingsOverlay.addEventListener("click", e => {
   if (e.target === settingsOverlay) settingsOverlay.classList.add("hidden");
+});
+
+// ── Global settings ───────────────────────────────────────────
+// Bottom-left gear opens the app-wide settings (Reduced Effects, Edit Raw Data).
+document.getElementById("settingsBtn").onclick = () => {
+  if (winnerShowing) dismissWinner();
+  globalSettingsOverlay.classList.toggle("hidden");
+};
+globalSettingsOverlay.addEventListener("click", e => {
+  if (e.target === globalSettingsOverlay) globalSettingsOverlay.classList.add("hidden");
 });
 
 // PITFALL — SETTINGS_DEFAULTS includes customImages, customSounds, and the
@@ -488,8 +556,9 @@ const WINNER_ACTION_KEYS = ["autoRemoveWinner", "autoDecrementWinner", "setWinne
 Object.keys(SETTINGS_DEFAULTS).forEach(k => {
   if (k === "customImages" || k === "customSounds") return;
   const el = document.getElementById(k);
+  if (!el) return; // key with no matching mischief input (none currently)
   el.addEventListener("input", () => {
-    settings[k] = el.type === "checkbox"
+    editSettings[k] = el.type === "checkbox"
       ? el.checked
       : Math.max(0, parseInt(el.value) || 0);
     // The three winner-action flags are mutually exclusive: turning one on
@@ -497,15 +566,15 @@ Object.keys(SETTINGS_DEFAULTS).forEach(k => {
     if (WINNER_ACTION_KEYS.includes(k) && el.checked) {
       WINNER_ACTION_KEYS.forEach(other => {
         if (other !== k) {
-          settings[other] = false;
+          editSettings[other] = false;
           document.getElementById(other).checked = false;
         }
       });
     }
     // Hide/Show Percentages changes the slice labels — rebuild the cached face
-    // so the running idle/spin draw picks it up immediately.
-    if (k === "hidePercentages") { renderWheelCache(); drawWheel(); }
-    saveCurrentSlot();
+    // so the running idle/spin draw picks it up (only if editing the live wheel).
+    if (k === "hidePercentages" && editingActive()) { renderWheelCache(); drawWheel(); }
+    persistEditSettings();
   });
 });
 
@@ -513,18 +582,18 @@ Object.keys(SETTINGS_DEFAULTS).forEach(k => {
 // and custom images/sounds untouched.
 document.getElementById("defaultsBtn").onclick = () => {
   ["speedChance","slowChance","swapChance","reverseChance","explodeChance","spinTime"]
-    .forEach(k => { settings[k] = SETTINGS_DEFAULTS[k]; });
+    .forEach(k => { editSettings[k] = SETTINGS_DEFAULTS[k]; });
   applySettingsToInputs();
-  saveCurrentSlot();
+  persistEditSettings();
 };
 
 document.getElementById("restoreImagesBtn").onclick = () => {
-  if (!settings.customImages) settings.customImages = {};
+  if (!editSettings.customImages) editSettings.customImages = {};
   Object.keys(EMOJI).forEach(state => {
-    settings.customImages[state] = [...DEFAULT_IMAGES[state]];
+    editSettings.customImages[state] = [...DEFAULT_IMAGES[state]];
   });
-  rebuildEmojiVariantsFromSettings();
-  saveCurrentSlot();
+  if (editingActive()) rebuildEmojiVariantsFromSettings();
+  persistEditSettings();
   renderImageSettings();
 };
 
@@ -541,8 +610,8 @@ function renderSoundSettings() {
     label.className = "snd-label";
     label.innerHTML = `<img src="icons/${SOUND_LABELS[key].icon}.svg" class="label-icon" alt="">${SOUND_LABELS[key].text}`;
 
-    const effective = (settings.customSounds && key in settings.customSounds)
-      ? settings.customSounds[key]
+    const effective = (editSettings.customSounds && key in editSettings.customSounds)
+      ? editSettings.customSounds[key]
       : DEFAULT_SOUNDS[key];
 
     const input = document.createElement("input");
@@ -553,12 +622,13 @@ function renderSoundSettings() {
 
     const commit = () => {
       const val     = input.value.trim();
-      const current = (settings.customSounds && key in settings.customSounds)
-        ? settings.customSounds[key] : DEFAULT_SOUNDS[key];
+      const current = (editSettings.customSounds && key in editSettings.customSounds)
+        ? editSettings.customSounds[key] : DEFAULT_SOUNDS[key];
       if (val === current) return;
-      if (!settings.customSounds) settings.customSounds = {};
-      settings.customSounds[key] = val;
-      saveCurrentSlot();
+      if (!editSettings.customSounds) editSettings.customSounds = {};
+      editSettings.customSounds[key] = val;
+      persistEditSettings();
+      if (editingActive() && audioCtx) reloadSounds();
     };
     input.addEventListener("blur", commit);
     input.addEventListener("keydown", e => {
@@ -574,10 +644,10 @@ function renderSoundSettings() {
 }
 
 document.getElementById("restoreSoundsBtn").onclick = () => {
-  settings.customSounds = {};
-  saveCurrentSlot();
+  editSettings.customSounds = {};
+  persistEditSettings();
   renderSoundSettings();
-  if (audioCtx) reloadSounds();
+  if (editingActive() && audioCtx) reloadSounds();
 };
 
 // ── Image settings UI ─────────────────────────────────────────
@@ -588,7 +658,7 @@ function renderImageSettings() {
   requestAnimationFrame(updateSettingsFades);
 
   Object.keys(IMAGE_STATE_LABELS).forEach(state => {
-    const urls    = settings.customImages?.[state] ?? [];
+    const urls    = editSettings.customImages?.[state] ?? [];
     const section = document.createElement("div");
     section.className = "img-state-section";
 
@@ -617,12 +687,12 @@ function renderImageSettings() {
     addBtn.onclick = () => {
       const val = input.value.trim();
       if (!val) return;
-      if (!settings.customImages) settings.customImages = {};
-      if (!Array.isArray(settings.customImages[state])) settings.customImages[state] = [];
-      settings.customImages[state].push(val);
+      if (!editSettings.customImages) editSettings.customImages = {};
+      if (!Array.isArray(editSettings.customImages[state])) editSettings.customImages[state] = [];
+      editSettings.customImages[state].push(val);
       input.value = "";
-      rebuildEmojiVariantsFromSettings();
-      saveCurrentSlot();
+      if (editingActive()) rebuildEmojiVariantsFromSettings();
+      persistEditSettings();
       renderImageSettings();
     };
     input.addEventListener("keydown", e => { if (e.key === "Enter") addBtn.click(); });
@@ -655,12 +725,12 @@ function makeUrlRow(state, url, idx) {
     const val = input.value.trim();
     if (val === url) return;
     if (val) {
-      settings.customImages[state][idx] = val;
+      editSettings.customImages[state][idx] = val;
     } else {
-      settings.customImages[state].splice(idx, 1);
+      editSettings.customImages[state].splice(idx, 1);
     }
-    rebuildEmojiVariantsFromSettings();
-    saveCurrentSlot();
+    if (editingActive()) rebuildEmojiVariantsFromSettings();
+    persistEditSettings();
     renderImageSettings();
   };
   input.addEventListener("blur", commit);
@@ -674,9 +744,9 @@ function makeUrlRow(state, url, idx) {
   removeBtn.className = "img-remove-btn";
   removeBtn.onmousedown = e => e.preventDefault(); // keep input focused until click fires
   removeBtn.onclick     = () => {
-    settings.customImages[state].splice(idx, 1);
-    rebuildEmojiVariantsFromSettings();
-    saveCurrentSlot();
+    editSettings.customImages[state].splice(idx, 1);
+    if (editingActive()) rebuildEmojiVariantsFromSettings();
+    persistEditSettings();
     renderImageSettings();
   };
 
@@ -751,11 +821,11 @@ function closeImageGallery() {
 function confirmImageGallery() {
   if (!gallerySelectedUrl || !galleryState) { closeImageGallery(); return; }
   const state = galleryState;
-  if (!settings.customImages) settings.customImages = {};
-  if (!Array.isArray(settings.customImages[state])) settings.customImages[state] = [];
-  settings.customImages[state].push(gallerySelectedUrl);
-  rebuildEmojiVariantsFromSettings();
-  saveCurrentSlot();
+  if (!editSettings.customImages) editSettings.customImages = {};
+  if (!Array.isArray(editSettings.customImages[state])) editSettings.customImages[state] = [];
+  editSettings.customImages[state].push(gallerySelectedUrl);
+  if (editingActive()) rebuildEmojiVariantsFromSettings();
+  persistEditSettings();
   closeImageGallery();
   renderImageSettings();
 }
@@ -862,7 +932,7 @@ function openRawData() {
 function closeRawData() {
   rawDataOverlay.classList.remove("show");
   rawDataError.textContent = "";
-  settingsOverlay.classList.add("hidden");
+  globalSettingsOverlay.classList.add("hidden");
 }
 
 function applyRawData() {
@@ -934,6 +1004,7 @@ document.getElementById("clearWheelsBtn").onclick = () => {
 
 canvas.onclick = () => {
   settingsOverlay.classList.add("hidden");
+  globalSettingsOverlay.classList.add("hidden");
   if (winnerShowing) { dismissWinner(); return; }
   spinWheel();
 };

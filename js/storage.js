@@ -103,9 +103,9 @@ function activateSlot(slotId) {
   // audio.js — reloads sound buffers with the slot's customSounds
   if (typeof reloadSounds === "function" && audioCtx) reloadSounds();
 
-  // ui.js / wheel.js — UI refresh
+  // ui.js / wheel.js — UI refresh. The Mischief settings menu is populated
+  // per-wheel when opened (openMischiefSettings), so it isn't refreshed here.
   updateWheelTitle();
-  applySettingsToInputs();
   renderEntrants();
   updateStats();
   resetWheelState();

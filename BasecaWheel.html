@@ -146,7 +146,7 @@
   <div id="settingsPanel" class="settings-panel">
     <div class="settings-panel-header">
       <h3><img src="icons/settings.svg" class="heading-icon" alt=""> Mischief Settings</h3>
-      <button id="rawDataBtn" class="settings-close-btn"><img src="icons/package.svg" class="btn-icon" alt=""> Edit Raw Data</button>
+      <span class="settings-subtitle" id="mischiefWheelName"></span>
     </div>
     <div class="settings-body-wrap">
       <div class="scroll-fade top"    id="settingsTopFade">   <div class="scroll-indicator">▲</div></div>
@@ -163,7 +163,6 @@
           </section>
           <section class="settings-section">
             <div class="settings-section-title">Features</div>
-            <label class="feature-label"><input type="checkbox" id="reducedEffects"       /> Reduced Effects</label>
             <label class="feature-label"><input type="checkbox" id="keepWinnersLog"       /> Keep Winners Log</label>
             <label class="feature-label"><input type="checkbox" id="hidePercentages"      /> Hide Percentages</label>
             <label class="feature-label"><input type="checkbox" id="idleTicks"            /> Idle Ticks</label>
@@ -194,6 +193,59 @@
   </div>
 </div>
 
+<!-- ── Global Settings modal ── -->
+<div id="globalSettingsOverlay" class="settings-overlay hidden">
+  <div class="settings-panel settings-panel-compact">
+    <div class="settings-panel-header">
+      <h3><img src="icons/settings.svg" class="heading-icon" alt=""> Global Settings</h3>
+      <button id="rawDataBtn" class="settings-close-btn"><img src="icons/package.svg" class="btn-icon" alt=""> Edit Raw Data</button>
+    </div>
+    <div class="global-settings-body">
+      <section class="settings-section">
+        <div class="settings-section-title">Display</div>
+        <label class="feature-label"><input type="checkbox" id="reducedEffects" /> Reduced Effects</label>
+      </section>
+
+      <section class="settings-section">
+        <div class="settings-section-title">Bot Connection (BasecaBot)</div>
+        <label>Hub URL
+          <input type="text" id="wsUrl" placeholder="ws://localhost:8080?room=baseca-wheel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+        </label>
+        <label>Secret
+          <input type="password" id="wsSecret" placeholder="WS_HUB_SECRET" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+        </label>
+        <div class="ws-conn-row">
+          <button id="wsConnectBtn" class="primary">Connect</button>
+          <button id="wsDisconnectBtn" class="danger" disabled>Disconnect</button>
+          <span id="wsStatus" class="ws-status">disconnected</span>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <div class="settings-section-title">Command Permissions (minimum level)</div>
+        <div class="ws-perm-grid" id="wsPermGrid"></div>
+      </section>
+
+      <section class="settings-section">
+        <div class="settings-section-title">Entry Config</div>
+        <label>Max entries per user (0 = unlimited)
+          <input type="number" id="wsMaxPerUser" min="0" value="2" />
+        </label>
+        <label class="feature-label"><input type="radio" name="wsLimitMode" id="wsLimitReject"  /> Reject after limit</label>
+        <label class="feature-label"><input type="radio" name="wsLimitMode" id="wsLimitReplace" /> Replace oldest</label>
+        <label class="feature-label"><input type="checkbox" id="wsAppendUsername" /> Append username to entry</label>
+      </section>
+
+      <section class="settings-section">
+        <div class="settings-section-title">Chat Messages</div>
+        <label class="feature-label"><input type="checkbox" id="wsAnnounceWinner" /> Announce the winner in chat</label>
+        <label class="feature-label"><input type="checkbox" id="wsAnnounceReplaced" /> Announce when an entry is replaced</label>
+        <label class="feature-label"><input type="checkbox" id="wsAnnounceRejected" /> Announce when a command is rejected</label>
+      </section>
+    </div>
+  </div>
+</div>
+
 <!-- ── Scripts (load order is critical — see each file's header comment) ── -->
 <script src="js/constants.js"></script>
 <script src="js/state.js"></script>
@@ -203,6 +255,7 @@
 <script src="js/wheel.js"></script>
 <script src="js/spin.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/ws.js"></script>
 <script src="js/boot.js"></script>
 
 </body>
