@@ -111,4 +111,7 @@ function activateSlot(slotId) {
   resetWheelState();
   renderWheelList();
   renderHistory(); // refresh history panel with the newly loaded slot's log
+
+  // ws.js — apply this wheel's BasecaBot connection policy (auto connect/disconnect).
+  if (typeof wsApplyWheelPolicy === "function") wsApplyWheelPolicy(settings.botAutoConnect);
 }

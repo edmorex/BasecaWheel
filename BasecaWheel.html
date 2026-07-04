@@ -49,14 +49,17 @@
       <input id="nameInput" class="entrant-add-input" placeholder="+ Entrant  or  Entrant, weight" name="bw-entrant-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-autocomplete="none" readonly onfocus="this.removeAttribute('readonly')" />
       <div class="entrant-scroll-wrap">
         <div class="scroll-fade top"    id="topFade">   <div class="scroll-indicator">▲</div></div>
-        <div class="entrant-list"       id="entrantList"></div>
+        <div class="entrant-list"       id="entrantList">
+          <div class="stats" id="stats"></div>
+        </div>
         <div class="scroll-fade bottom" id="bottomFade"><div class="scroll-indicator">▼</div></div>
       </div>
     </div>
 
     <div class="sidebar-footer">
-      <button id="settingsBtn" class="settings-btn" title="Mischief Settings"><img src="icons/settings.svg" class="btn-icon" alt=""></button>
-      <div class="stats" id="stats"></div>
+      <button id="settingsBtn" class="settings-btn" title="Global Settings"><img src="icons/settings.svg" class="btn-icon" alt=""></button>
+      <button id="wsQuickBtn" class="ws-quick-btn" title="Connect to bot"><img src="icons/link.svg" class="btn-icon" alt=""></button>
+      <span id="wsStatusFooter" class="ws-status">disconnected</span>
     </div>
   </div>
   </div>
@@ -171,6 +174,11 @@
             <label class="feature-label"><input type="checkbox" id="autoDecrementWinner" /> Auto Decrement Winner</label>
             <label class="feature-label"><input type="checkbox" id="setWinnerToOne"      /> Set Winner to 1</label>
           </section>
+          <section class="settings-section">
+            <div class="settings-section-title">BasecaBot</div>
+            <label class="feature-label"><input type="radio" name="botConnMode" id="botAutoDisconnect" /> Auto Disconnect</label>
+            <label class="feature-label"><input type="radio" name="botConnMode" id="botAutoConnect"    /> Auto Connect</label>
+          </section>
         </div>
         <div class="settings-right-col">
           <section class="settings-section">
@@ -209,7 +217,7 @@
       <section class="settings-section">
         <div class="settings-section-title">Bot Connection (BasecaBot)</div>
         <label>Hub URL
-          <input type="text" id="wsUrl" placeholder="ws://localhost:8080?room=baseca-wheel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          <input type="text" id="wsUrl" placeholder="wss://bot.edmorex.com/ws?room=baseca-wheel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
         </label>
         <label>Secret
           <input type="password" id="wsSecret" placeholder="WS_HUB_SECRET" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />

@@ -394,7 +394,7 @@ button:hover { transform: translateY(-1px); }
 .entrant-scroll-wrap {
   position: relative;
   flex: 1;
-  min-height: 0;
+  min-height: 72px; /* keep at least ~1.5 entrant rows visible */
   overflow: hidden;
 }
 
@@ -480,17 +480,25 @@ button:hover { transform: translateY(-1px); }
   color: white;
 }
 
-.stats { flex: 1; opacity: 0.8; line-height: 1.6; font-size: 14px; }
+/* Entry totals — the last item inside the scrollable entrant list, so it sits
+   directly below the last entrant and scrolls with the content. */
+.stats {
+  flex-shrink: 0;
+  opacity: 0.7;
+  font-size: 13px;
+  text-align: center;
+  padding-top: 2px;
+}
 
 /* ── Sidebar footer ── */
 .sidebar-footer {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding-top: 8px;
-  flex-shrink: 0;
-  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 5px;
   margin-top: 8px;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255,255,255,0.08); /* divider just above the settings button */
 }
 
 /* ── Entrant controls row ── */
@@ -970,6 +978,30 @@ canvas {
   padding: 0;
 }
 .settings-btn:hover { transform: rotate(18deg); }
+
+/* Quick bot connect/disconnect button + its status text in the sidebar footer */
+.ws-quick-btn {
+  flex-shrink: 0;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(15,23,42,0.95);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  padding: 0;
+}
+.ws-quick-btn.connected {
+  border-color: var(--accent);
+  background: rgba(34,197,94,0.18);
+}
+.ws-quick-btn:hover { transform: rotate(18deg); } /* tilt like the settings gear, no jump */
+.sidebar-footer .ws-status {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* ── Mischief Settings modal overlay ── */
 .settings-overlay {

@@ -23,7 +23,7 @@
 const WS_CONFIG_KEY = "basca_ws_config";
 const WS_ROOM       = "baseca-wheel";
 // Commands with their own configurable permission row in the UI.
-const WS_COMMANDS   = ["title", "add", "spin"];
+const WS_COMMANDS   = ["add", "spin", "title"];
 // Which configured permission each accepted command uses. `clear` piggybacks
 // on `add`'s level, `reset` on `title`'s (so they share, not duplicate, config).
 const WS_PERM_SOURCE = { title: "title", add: "add", spin: "spin", clear: "add", reset: "title" };
@@ -32,12 +32,12 @@ const WS_PERM_FULL  = ["Viewer", "Subscriber", "VIP", "Moderator", "Broadcaster"
 const WS_PERM_SHORT = ["Viewer", "Sub", "VIP", "Mod", "Caster", "Admin"];
 
 const WS_DEFAULTS = {
-  url:              "ws://localhost:8080?room=baseca-wheel",
+  url:              "wss://bot.edmorex.com/ws?room=baseca-wheel",
   secret:           "",
-  perms:            { title: 3, add: 0, spin: 3 }, // minimum PermissionLevel per command
-  maxPerUser:       2,                             // 0 = unlimited
-  limitMode:        "reject",                      // "reject" | "replace"
-  appendUsername:   false,                         // append " (user)" to each entry
+  perms:            { add: 0, spin: 3, title: 3 }, // minimum PermissionLevel per command
+  maxPerUser:       1,                             // 0 = unlimited
+  limitMode:        "replace",                     // "reject" | "replace"
+  appendUsername:   true,                          // append " (user)" to each entry
   announceWinner:   true,
   announceReplaced: true, // "Replace oldest": tell the user their oldest entry was replaced
   announceRejected: true, // tell the user when a command was rejected (limit/permission/spinning)
@@ -143,6 +143,18 @@ function wsDisconnect() {
 function wsSend(type, payload) {
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type, room: WS_ROOM, payload, ts: Date.now() }));
+  }
+}
+
+// Applied whenever a wheel becomes active (activateSlot). Per-wheel setting:
+//   autoConnect === true  → connect if we're not already connected/trying and
+//                           a URL + secret are saved.
+//   autoConnect === false → disconnect if we currently have a connection intent.
+function wsApplyWheelPolicy(autoConnect) {
+  if (autoConnect) {
+    if (!wsWantConnected && wsConfig.url.trim() && wsConfig.secret.trim()) wsConnect();
+  } else {
+    if (wsWantConnected) wsDisconnect();
   }
 }
 
@@ -276,20 +288,37 @@ function wsSendNobody() {
   if (wsConfig.announceWinner) wsSend("announce", { text: "The wheel broke — nobody wins! 💥" });
 }
 
-// ── Settings UI (in the global menu) ──────────────────────────
+// ── Settings UI (global menu) + quick button (sidebar footer) ──
 function wsSetStatus(text, cls) {
-  const el = document.getElementById("wsStatus");
-  if (!el) return;
-  el.textContent = text;
-  el.className = "ws-status" + (cls ? " " + cls : "");
+  const className = "ws-status" + (cls ? " " + cls : "");
+  // Same status shown in the global menu and the sidebar-footer quick button.
+  ["wsStatus", "wsStatusFooter"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    el.className   = className;
+  });
 }
 
 function wsUpdateButtons() {
   const connectBtn    = document.getElementById("wsConnectBtn");
   const disconnectBtn = document.getElementById("wsDisconnectBtn");
-  if (!connectBtn || !disconnectBtn) return;
-  connectBtn.disabled    = wsWantConnected;
-  disconnectBtn.disabled = !wsWantConnected;
+  if (connectBtn && disconnectBtn) {
+    connectBtn.disabled    = wsWantConnected;
+    disconnectBtn.disabled = !wsWantConnected;
+  }
+  const quickBtn = document.getElementById("wsQuickBtn");
+  if (quickBtn) {
+    const connected = !!(ws && ws.readyState === WebSocket.OPEN);
+    quickBtn.classList.toggle("connected", connected);
+    quickBtn.title = wsWantConnected ? "Disconnect from bot" : "Connect to bot";
+  }
+}
+
+// Sidebar quick button: toggle the connection based on the user's intent.
+function wsToggleConnection() {
+  if (wsWantConnected) wsDisconnect();
+  else                 wsConnect();
 }
 
 function wsBuildPermGrid() {
@@ -353,11 +382,9 @@ function wsPopulateInputs() {
   const maxEl    = document.getElementById("wsMaxPerUser");
 
   urlEl.addEventListener("input", () => { wsConfig.url = urlEl.value; wsSaveConfig(); });
+  // The secret stays type="password" at all times — never revealed, even while
+  // focused/typing, so an onlooker can't read it off the screen.
   secretEl.addEventListener("input", () => { wsConfig.secret = secretEl.value; wsSaveConfig(); });
-  // Reveal the secret only while the field is focused (like a password field
-  // that shows its value when you click into it).
-  secretEl.addEventListener("focus", () => { secretEl.type = "text"; });
-  secretEl.addEventListener("blur",  () => { secretEl.type = "password"; });
 
   maxEl.addEventListener("input", () => {
     wsConfig.maxPerUser = Math.max(0, parseInt(maxEl.value) || 0);
@@ -385,4 +412,7 @@ function wsPopulateInputs() {
 
   document.getElementById("wsConnectBtn").onclick    = wsConnect;
   document.getElementById("wsDisconnectBtn").onclick = wsDisconnect;
+
+  const quickBtn = document.getElementById("wsQuickBtn");
+  if (quickBtn) quickBtn.onclick = wsToggleConnection;
 })();

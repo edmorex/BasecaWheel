@@ -398,6 +398,10 @@ function renderEntrants() {
     row.appendChild(removeBtn);
     entrantListEl.appendChild(row);
   });
+  // Totals live inside the scrollable list, after the last entrant, so they sit
+  // directly below it and scroll with the content. innerHTML="" detached the
+  // #stats element above; re-append the persistent node here.
+  entrantListEl.appendChild(statsDiv);
   requestAnimationFrame(updateScrollFades);
 }
 
@@ -514,12 +518,15 @@ function openMischiefSettings(wheelId) {
 
 function applySettingsToInputs() {
   Object.keys(SETTINGS_DEFAULTS).forEach(k => {
-    if (k === "customImages" || k === "customSounds") return;
+    if (k === "customImages" || k === "customSounds" || k === "botAutoConnect") return;
     const el = document.getElementById(k);
     if (!el) return; // e.g. reducedEffects lives in the global menu, not here
     if (el.type === "checkbox") el.checked = !!editSettings[k];
     else                        el.value   = editSettings[k];
   });
+  // BasecaBot connection mode is a two-radio (mutually exclusive) setting.
+  document.getElementById("botAutoConnect").checked    = !!editSettings.botAutoConnect;
+  document.getElementById("botAutoDisconnect").checked = !editSettings.botAutoConnect;
   renderSoundSettings();
   renderImageSettings();
 }
@@ -535,9 +542,21 @@ function updateSettingsFades() {
 
 document.getElementById("settingsPanelBody").addEventListener("scroll", updateSettingsFades);
 
-settingsOverlay.addEventListener("click", e => {
-  if (e.target === settingsOverlay) settingsOverlay.classList.add("hidden");
-});
+// Dismiss a modal overlay only when the press STARTED on the backdrop. A plain
+// click handler also fires when a drag begun inside the box (e.g. selecting
+// text) releases on the backdrop — the click's target is the overlay because
+// it's the common ancestor of the down/up targets. Requiring the pointerdown
+// to have landed on the backdrop too prevents that accidental dismissal.
+function dismissOnBackdrop(overlay, onDismiss) {
+  let downOnBackdrop = false;
+  overlay.addEventListener("pointerdown", e => { downOnBackdrop = (e.target === overlay); });
+  overlay.addEventListener("click", e => {
+    if (downOnBackdrop && e.target === overlay) onDismiss();
+    downOnBackdrop = false;
+  });
+}
+
+dismissOnBackdrop(settingsOverlay, () => settingsOverlay.classList.add("hidden"));
 
 // ── Global settings ───────────────────────────────────────────
 // Bottom-left gear opens the app-wide settings (Reduced Effects, Edit Raw Data).
@@ -545,16 +564,14 @@ document.getElementById("settingsBtn").onclick = () => {
   if (winnerShowing) dismissWinner();
   globalSettingsOverlay.classList.toggle("hidden");
 };
-globalSettingsOverlay.addEventListener("click", e => {
-  if (e.target === globalSettingsOverlay) globalSettingsOverlay.classList.add("hidden");
-});
+dismissOnBackdrop(globalSettingsOverlay, () => globalSettingsOverlay.classList.add("hidden"));
 
 // PITFALL — SETTINGS_DEFAULTS includes customImages, customSounds, and the
 // boolean feature flags. Guard against null.addEventListener() for the
 // object-valued keys, and read .checked (not .value) for checkboxes.
 const WINNER_ACTION_KEYS = ["autoRemoveWinner", "autoDecrementWinner", "setWinnerToOne"];
 Object.keys(SETTINGS_DEFAULTS).forEach(k => {
-  if (k === "customImages" || k === "customSounds") return;
+  if (k === "customImages" || k === "customSounds" || k === "botAutoConnect") return;
   const el = document.getElementById(k);
   if (!el) return; // key with no matching mischief input (none currently)
   el.addEventListener("input", () => {
@@ -576,6 +593,16 @@ Object.keys(SETTINGS_DEFAULTS).forEach(k => {
     if (k === "hidePercentages" && editingActive()) { renderWheelCache(); drawWheel(); }
     persistEditSettings();
   });
+});
+
+// BasecaBot connection mode (per-wheel, mutually exclusive). Just persists the
+// choice — the connect/disconnect behaviour is applied when the wheel is made
+// active (see wsApplyWheelPolicy in ws.js, called from activateSlot).
+document.getElementById("botAutoConnect").addEventListener("change", e => {
+  if (e.target.checked) { editSettings.botAutoConnect = true;  persistEditSettings(); }
+});
+document.getElementById("botAutoDisconnect").addEventListener("change", e => {
+  if (e.target.checked) { editSettings.botAutoConnect = false; persistEditSettings(); }
 });
 
 // "Restore Weights" resets only the Chances sliders, leaving feature flags
@@ -832,9 +859,7 @@ function confirmImageGallery() {
 
 document.getElementById("galleryCancel").onclick  = closeImageGallery;
 document.getElementById("galleryConfirm").onclick = confirmImageGallery;
-imageGalleryOverlay.addEventListener("click", e => {
-  if (e.target === imageGalleryOverlay) closeImageGallery();
-});
+dismissOnBackdrop(imageGalleryOverlay, closeImageGallery);
 
 // ── Scroll fades ──────────────────────────────────────────────
 function updateScrollFades() {
@@ -864,9 +889,7 @@ function closeModal() {
 }
 
 document.getElementById("modalCancel").onclick = closeModal;
-document.getElementById("modalOverlay").addEventListener("click", e => {
-  if (e.target === document.getElementById("modalOverlay")) closeModal();
-});
+dismissOnBackdrop(document.getElementById("modalOverlay"), closeModal);
 
 // ── Raw data backup / restore ─────────────────────────────────
 function exportAllData() {
@@ -947,9 +970,7 @@ function applyRawData() {
 document.getElementById("rawDataBtn").onclick    = openRawData;
 document.getElementById("rawDataApply").onclick  = () => { if (applyRawData()) closeRawData(); };
 document.getElementById("rawDataCancel").onclick = closeRawData;
-rawDataOverlay.addEventListener("click", e => {
-  if (e.target === rawDataOverlay) closeRawData();
-});
+dismissOnBackdrop(rawDataOverlay, closeRawData);
 
 // rawDataSaveBtn and rawDataLoadBtn removed — file save/load moved to wheel section buttons.
 
@@ -1256,9 +1277,31 @@ function applyDividerHeight(h) {
   wheelListEl.style.height = Math.max(DIVIDER_MIN, h) + "px";
 }
 
+// Minimum height the entrant section needs: the add-input plus ~1.5 entrant
+// rows of list (the stats line lives inside the list and scrolls with it).
+// Measured so it tracks font size / zoom.
+function entrantMinHeight() {
+  const addInput = sidebarWrapper.querySelector(".entrant-add-input");
+  const LIST_MIN = 72; // ≈ 1.5 rows (matches .entrant-scroll-wrap min-height)
+  return (addInput ? addInput.offsetHeight + 6 : 46) + LIST_MIN; // input + its margin-bottom
+}
+
 // Restore saved height (falls back to 110 — the CSS default), clamped to the
 // minimum so an old saved value below 1.5 rows can't slip through.
 applyDividerHeight(parseInt(localStorage.getItem(DIVIDER_KEY)) || 110);
+
+// Also clamp so the wheel list can't be so tall that the entrant section is
+// squeezed below its minimum (e.g. an oversized height saved before the stats
+// line moved here). Deferred a frame so the section has been laid out.
+requestAnimationFrame(() => {
+  const section = sidebarWrapper.querySelector(".entrant-section");
+  if (!section) return;
+  const overshoot = entrantMinHeight() - section.clientHeight;
+  if (overshoot > 0) {
+    const cur = parseInt(wheelListEl.style.height) || 110;
+    applyDividerHeight(cur - overshoot);
+  }
+});
 
 (function initDivider() {
   const divider = document.getElementById("sectionDivider");
@@ -1288,10 +1331,11 @@ applyDividerHeight(parseInt(localStorage.getItem(DIVIDER_KEY)) || 110);
     startH = parseInt(wheelListEl.style.height) || 110;
 
     // Max = current wheel-list height + however much the entrant-section can
-    // give up before it can no longer show a single entrant row (~44px + padding).
-    // Measured once here so the ceiling stays stable for the whole drag gesture.
+    // give up while still showing the add-input, ~1.5 entrant rows, and the
+    // stats line. Measured once here so the ceiling stays stable for the drag.
     const entrantSection = sidebarWrapper.querySelector(".entrant-section");
-    const headroom = entrantSection ? Math.max(0, entrantSection.clientHeight - 50) : 0;
+    const reserve  = entrantMinHeight();
+    const headroom = entrantSection ? Math.max(0, entrantSection.clientHeight - reserve) : 0;
     maxDragH = startH + headroom;
 
     document.body.classList.add("resizing-v");

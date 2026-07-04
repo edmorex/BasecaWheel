@@ -21,6 +21,7 @@ const SETTINGS_DEFAULTS = {
   hidePercentages: false, idleTicks: false,
   autoIncrementLosers: false,
   autoRemoveWinner: false, autoDecrementWinner: false, setWinnerToOne: false,
+  botAutoConnect: false, // BasecaBot: false = Auto Disconnect (default), true = Auto Connect
   customImages: {}, customSounds: {},
 };
 
