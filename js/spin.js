@@ -185,10 +185,14 @@ function launchExplosion() {
 }
 
 function randomSwap() {
-  if (entrants.length < 2) return;
-  let a = Math.floor(Math.random() * entrants.length), b;
-  do { b = Math.floor(Math.random() * entrants.length); } while (b === a);
-  [entrants[a], entrants[b]] = [entrants[b], entrants[a]];
+  // Shuffle only entrants that are on the wheel (paused ones aren't swapped).
+  const active = activeEntrants();
+  if (active.length < 2) return;
+  let a = Math.floor(Math.random() * active.length), b;
+  do { b = Math.floor(Math.random() * active.length); } while (b === a);
+  const ia = entrants.indexOf(active[a]);
+  const ib = entrants.indexOf(active[b]);
+  [entrants[ia], entrants[ib]] = [entrants[ib], entrants[ia]];
   renderEntrants(); saveEntrants();
   renderWheelCache(); // slice order/labels changed mid-spin — refresh the cached face
 }
@@ -234,7 +238,7 @@ function doNobodyWins() {
 
 // ── Main spin ─────────────────────────────────────────────────
 function spinWheel() {
-  if (spinning || !entrants.length) return;
+  if (spinning || !activeEntrants().length) return; // nothing on the wheel to spin
 
   stopIdleRotation();
   initAudio().then(startBg);
@@ -429,6 +433,7 @@ function spinWheel() {
     drawWheel(currentRotation);
 
     const winner = getWinnerAtRotation(currentRotation);
+    if (!winner) { resetWheelState(); return; } // no active entrants (edge case)
     winnerTitle.textContent = "";
     winnerTitle.classList.remove("bad");
     winnerBox.classList.remove("exploded");
@@ -448,23 +453,23 @@ function spinWheel() {
     if (typeof wsSendResult === "function") wsSendResult(winner.name); // announce to BasecaBot if connected
 
     // ── Auto-features ─────────────────────────────────────────
-    // Apply weight/presence changes while the winner overlay is visible so
-    // the sidebar reflects the new state for the next spin. renderEntrants()
-    // and updateStats() are defined in ui.js (safe — called at runtime).
-    const winnerIdx = getSliceIndexAt(currentRotation);
+    // Apply weight/presence changes while the winner overlay is visible so the
+    // sidebar reflects the new state for the next spin. Operates on the winner
+    // object + active entrants, so paused entrants are never touched (e.g. Auto
+    // Increment Losers skips them). renderEntrants()/updateStats() are in ui.js.
     let autoChanged = false;
 
     if (settings.autoIncrementLosers) {
-      entrants.forEach((e, i) => { if (i !== winnerIdx) { e.weight++; autoChanged = true; } });
+      activeEntrants().forEach(e => { if (e !== winner) { e.weight++; autoChanged = true; } });
     }
     if (settings.autoRemoveWinner) {
-      entrants.splice(winnerIdx, 1);
+      const wi = entrants.indexOf(winner);
+      if (wi !== -1) { entrants.splice(wi, 1); autoChanged = true; }
+    } else if (settings.autoDecrementWinner && winner.weight > 1) {
+      winner.weight--;
       autoChanged = true;
-    } else if (settings.autoDecrementWinner && entrants[winnerIdx]?.weight > 1) {
-      entrants[winnerIdx].weight--;
-      autoChanged = true;
-    } else if (settings.setWinnerToOne && entrants[winnerIdx]?.weight !== 1) {
-      entrants[winnerIdx].weight = 1;
+    } else if (settings.setWinnerToOne && winner.weight !== 1) {
+      winner.weight = 1;
       autoChanged = true;
     }
 

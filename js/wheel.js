@@ -125,8 +125,15 @@ window.addEventListener("resize", () => {
 });
 
 // ── Wheel math ────────────────────────────────────────────────
+// Entrants that are actually ON the wheel. Paused entrants stay in the list
+// (shown struck-through in the sidebar) but are excluded from the wheel, its
+// slice math, the winner pick, and post-spin weight rules.
+function activeEntrants() {
+  return entrants.filter(e => !e.paused);
+}
+
 function totalWeight() {
-  return entrants.reduce((s, e) => s + e.weight, 0);
+  return activeEntrants().reduce((s, e) => s + e.weight, 0);
 }
 
 // pointerAngle maps a canvas rotation value to the angle the pointer
@@ -135,28 +142,31 @@ function pointerAngle(rotation) {
   return ((-(rotation % (Math.PI * 2))) + Math.PI * 2) % (Math.PI * 2);
 }
 
+// Index into the ACTIVE entrant list (activeEntrants()), not the full list.
 function getSliceIndexAt(rotation) {
-  const total = totalWeight();
-  const pa    = pointerAngle(rotation);
-  let   cum   = 0;
-  for (let i = 0; i < entrants.length; i++) {
-    cum += entrants[i].weight / total * Math.PI * 2;
+  const active = activeEntrants();
+  const total  = totalWeight();
+  const pa     = pointerAngle(rotation);
+  let   cum    = 0;
+  for (let i = 0; i < active.length; i++) {
+    cum += active[i].weight / total * Math.PI * 2;
     if (pa < cum) return i;
   }
   return 0;
 }
 
 function getWinnerAtRotation(rotation) {
-  return entrants[getSliceIndexAt(rotation)];
+  return activeEntrants()[getSliceIndexAt(rotation)];
 }
 
 function pointerNearSliceEdge(rotation) {
-  if (!entrants.length) return false;
+  const active = activeEntrants();
+  if (!active.length) return false;
   const total     = totalWeight();
   const pa        = pointerAngle(rotation);
   const THRESHOLD = 0.06;
   let   cum       = 0;
-  for (const e of entrants) {
+  for (const e of active) {
     const end = cum + e.weight / total * Math.PI * 2;
     if (Math.abs(pa - cum) < THRESHOLD || Math.abs(pa - end) < THRESHOLD) return true;
     cum = end;
@@ -196,7 +206,8 @@ function renderWheelCache() {
   const cy = wheelCY;
   c.clearRect(0, 0, wheelCache.width, wheelCache.height);
 
-  if (!entrants.length) {
+  const active = activeEntrants(); // paused entrants are not drawn
+  if (!active.length) {
     c.beginPath();
     c.arc(cx, cy, wheelRadius, 0, Math.PI * 2);
     c.fillStyle = "#334155";
@@ -207,7 +218,7 @@ function renderWheelCache() {
   const total      = totalWeight();
   let   startAngle = 0; // face is cached at rotation 0; drawWheel() rotates it
 
-  entrants.forEach((e, i) => {
+  active.forEach((e, i) => {
     const slice    = e.weight / total * Math.PI * 2;
     const endAngle = startAngle + slice;
 
@@ -261,7 +272,7 @@ function triggerPointerTick(cwSpin) {
 }
 
 function updatePointerTick(rotation) {
-  if (!entrants.length) return;
+  if (!activeEntrants().length) return;
   const idx = getSliceIndexAt(rotation);
   if (idx !== previousSliceIdx) {
     const cw = prevTickRotation === null || (rotation - prevTickRotation) >= 0;

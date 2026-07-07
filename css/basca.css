@@ -199,7 +199,7 @@ body.resizing-v * { cursor: ns-resize !important; user-select: none !important; 
 
 .wheel-row {
   display: grid;
-  grid-template-columns: 20px 1fr auto auto;
+  grid-template-columns: 22px 1fr auto auto;
   gap: 6px;
   align-items: center;
   background: rgba(255,255,255,0.05);
@@ -224,8 +224,8 @@ body.resizing-v * { cursor: ns-resize !important; user-select: none !important; 
 .wheel-drag-handle,
 .entrant-drag-handle {
   cursor: grab;
-  opacity: 0.35;
-  font-size: 15px;
+  opacity: 0.45;
+  font-size: 19px;
   line-height: 1;
   display: flex;
   align-items: center;
@@ -233,7 +233,7 @@ body.resizing-v * { cursor: ns-resize !important; user-select: none !important; 
   user-select: none;
 }
 .wheel-drag-handle:hover,
-.entrant-drag-handle:hover { opacity: 0.75; }
+.entrant-drag-handle:hover { opacity: 0.8; }
 
 /* Per-wheel settings (gear) button — solid, like the entrant weight buttons.
    Uses the default button:hover translateY lift (no override). */
@@ -434,7 +434,7 @@ button:hover { transform: translateY(-1px); }
 
 .entrant {
   display: grid;
-  grid-template-columns: 20px minmax(0,1fr) auto 32px;
+  grid-template-columns: 22px minmax(0,1fr) auto auto 32px;
   gap: 8px;
   align-items: center;
   background: rgba(255,255,255,0.05);
@@ -473,12 +473,24 @@ button:hover { transform: translateY(-1px); }
 .weight-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 .remove-btn {
-  width: 32px; height: 32px;
+  width: 28px; height: 28px;
   padding: 0;
   border-radius: 9px;
   background: var(--danger);
   color: white;
 }
+
+/* ── Paused entrant (temporarily off the wheel) ── */
+.entrant.paused .entrant-name-edit {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+/* Pause button lights up while the entrant is paused */
+.weight-btn.pause-btn.paused-on {
+  background: var(--accent);
+}
+.weight-btn.pause-btn.paused-on .btn-icon { filter: brightness(0); } /* dark icon on accent */
+.stats-muted { opacity: 0.6; }
 
 /* Entry totals — the last item inside the scrollable entrant list, so it sits
    directly below the last entrant and scrolls with the content. */

@@ -80,7 +80,9 @@ function renderWheelList() {
     const isActive = wheel.id === activeSlot;
     const row = document.createElement("div");
     row.className = "wheel-row" + (isActive ? " active-wheel" : "");
-    row.draggable = true;
+    // Draggable only while the grab handle is pressed (set below) — otherwise
+    // clicking into the title input would move the row instead of selecting text.
+    row.draggable = false;
 
     // ── Drag-and-drop ────────────────────────────────────────
     row.addEventListener("dragstart", e => {
@@ -95,6 +97,7 @@ function renderWheelList() {
     row.addEventListener("dragend", () => {
       dragSrcIdx = null;
       stopDragScroll();
+      row.draggable = false; // re-lock until the handle is pressed again
       row.classList.remove("dragging");
       wheelListEl.querySelectorAll(".wheel-row").forEach(r =>
         r.classList.remove("drag-over-top", "drag-over-bottom")
@@ -132,9 +135,13 @@ function renderWheelList() {
     });
 
     // ── Drag handle ──────────────────────────────────────────
+    // Enable row dragging only while the handle is pressed; reset on release
+    // (covers a press-without-drag). dragend also resets after a real drag.
     const handle = document.createElement("span");
     handle.className   = "wheel-drag-handle";
     handle.textContent = "⠿";
+    handle.addEventListener("pointerdown", () => { row.draggable = true; });
+    handle.addEventListener("pointerup",   () => { row.draggable = false; });
 
     // ── Title input ──────────────────────────────────────────
     // Only the ACTIVE wheel's title is editable. For inactive wheels the input
@@ -289,8 +296,10 @@ function renderEntrants() {
   entrantListEl.innerHTML = "";
   entrants.forEach((entrant, index) => {
     const row = document.createElement("div");
-    row.className = "entrant";
-    row.draggable = true;
+    row.className = "entrant" + (entrant.paused ? " paused" : "");
+    // Draggable only while the grab handle is pressed (set below) — otherwise
+    // clicking into the name input would move the row instead of selecting text.
+    row.draggable = false;
 
     // ── Drag-and-drop reorder ────────────────────────────────
     row.addEventListener("dragstart", e => {
@@ -302,6 +311,7 @@ function renderEntrants() {
     row.addEventListener("dragend", () => {
       entrantDragSrcIdx = null;
       stopEntrantDragScroll();
+      row.draggable = false; // re-lock until the handle is pressed again
       row.classList.remove("dragging");
       entrantListEl.querySelectorAll(".entrant").forEach(r =>
         r.classList.remove("drag-over-top", "drag-over-bottom")
@@ -337,9 +347,13 @@ function renderEntrants() {
     });
 
     // ── Drag handle ──────────────────────────────────────────
+    // Enable row dragging only while the handle is pressed; reset on release
+    // (covers a press-without-drag). dragend also resets after a real drag.
     const handle = document.createElement("span");
     handle.className   = "entrant-drag-handle";
     handle.textContent = "⠿";
+    handle.addEventListener("pointerdown", () => { row.draggable = true; });
+    handle.addEventListener("pointerup",   () => { row.draggable = false; });
 
     // ── Name (underline edit, like the wheel title) ──────────
     const nameInput       = document.createElement("input");
@@ -385,6 +399,16 @@ function renderEntrants() {
 
     ctrl.appendChild(minus); ctrl.appendChild(wInput); ctrl.appendChild(plus);
 
+    // ── Pause / resume: temporarily removes the entrant from the wheel ──
+    const pauseBtn       = document.createElement("button");
+    pauseBtn.className   = "weight-btn pause-btn" + (entrant.paused ? " paused-on" : "");
+    pauseBtn.title       = entrant.paused ? "Resume entrant (back on the wheel)" : "Pause entrant (remove from the wheel)";
+    pauseBtn.innerHTML   = '<img src="icons/circle-pause.svg" class="btn-icon" alt="">';
+    pauseBtn.onclick     = () => {
+      entrant.paused = !entrant.paused;
+      saveEntrants(); renderEntrants(); updateStats(); resetWheelState();
+    };
+
     const removeBtn       = document.createElement("button");
     removeBtn.className = "remove-btn"; removeBtn.innerHTML = '<img src="icons/circle-x.svg" class="btn-icon" alt="">';
     removeBtn.onclick     = () => {
@@ -395,6 +419,7 @@ function renderEntrants() {
     row.appendChild(handle);
     row.appendChild(nameInput);
     row.appendChild(ctrl);
+    row.appendChild(pauseBtn);
     row.appendChild(removeBtn);
     entrantListEl.appendChild(row);
   });
@@ -406,7 +431,11 @@ function renderEntrants() {
 }
 
 function updateStats() {
-  statsDiv.innerHTML = `Total Entrants: <b>${entrants.length}</b> Total Weight: <b>${totalWeight()}</b>`;
+  // Counts reflect what's on the wheel (active); paused entrants are noted.
+  const activeCount = activeEntrants().length;
+  const pausedCount = entrants.length - activeCount;
+  const pausedNote  = pausedCount ? ` <span class="stats-muted">(${pausedCount} paused)</span>` : "";
+  statsDiv.innerHTML = `Total Entrants: <b>${activeCount}</b>${pausedNote} Total Weight: <b>${totalWeight()}</b>`;
 }
 
 function resetWheelState() {
