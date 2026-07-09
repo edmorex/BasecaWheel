@@ -25,8 +25,8 @@ const WS_ROOM       = "baseca-wheel";
 // Commands with their own configurable permission row in the UI.
 const WS_COMMANDS   = ["add", "spin", "title"];
 // Which configured permission each accepted command uses. `clear` piggybacks
-// on `add`'s level, `reset` on `title`'s (so they share, not duplicate, config).
-const WS_PERM_SOURCE = { title: "title", add: "add", spin: "spin", clear: "add", reset: "title" };
+// on `add`'s level, `clearall` on `title`'s (so they share, not duplicate, config).
+const WS_PERM_SOURCE = { title: "title", add: "add", spin: "spin", clear: "add", clearall: "title" };
 // Index = PermissionLevel from the bot's enum (0 = lowest).
 const WS_PERM_FULL  = ["Viewer", "Subscriber", "VIP", "Moderator", "Broadcaster", "Admin"];
 const WS_PERM_SHORT = ["Viewer", "Sub", "VIP", "Mod", "Caster", "Admin"];
@@ -187,7 +187,7 @@ function wsHandleWheel(p) {
   } else if (command === "clear") {
     if (spinning) { wsRejectMsg(user, WS_SPINNING_MSG); return; } // no editing mid-spin
     wsHandleClearUser(user); // remove this user's own entries
-  } else if (command === "reset") {
+  } else if (command === "clearall") {
     if (spinning) { wsRejectMsg(user, WS_SPINNING_MSG); return; } // no editing mid-spin
     wsHandleReset(); // wipe every entry on the wheel
   } else if (command === "spin") {
@@ -245,7 +245,7 @@ function wsHandleAdd(text, user) {
       list.push(ent);
       wsAfterEntrantsChange();
       if (wsConfig.announceReplaced) {
-        wsSend("announce", { text: `@${user} replaced your oldest entry with "${text}".` });
+        wsSend("announce", { text: `@${user} your oldest entry was replaced with "${text}".` });
       }
     } else {
       // reject after limit
@@ -273,7 +273,7 @@ function wsHandleClearUser(user) {
   wsAfterEntrantsChange();
 }
 
-// !wheel reset — wipe every entry on the wheel and forget all per-user counts.
+// !wheel clearall — wipe every entry on the wheel and forget all per-user counts.
 function wsHandleReset() {
   entrants = [];
   wsUserEntries.clear();
@@ -285,7 +285,7 @@ function wsSendResult(name) {
   if (wsConfig.announceWinner) wsSend("result", { winner: name });
 }
 function wsSendNobody() {
-  if (wsConfig.announceWinner) wsSend("announce", { text: "The wheel broke — nobody wins! 💥" });
+  if (wsConfig.announceWinner) wsSend("announce", { text: "Uh oh, It's broken! Nobody wins!" });
 }
 
 // ── Settings UI (global menu) + quick button (sidebar footer) ──
