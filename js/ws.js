@@ -12,9 +12,11 @@
 //          saveWheelList, saveCurrentSlot (storage.js); safeSetItem (storage.js).
 // Exposes (for spin.js): wsSendResult(name), wsSendNobody().
 //
-// PROTOCOL: see docs/basecawheel-integration.md. Every message is
+// PROTOCOL: see the BasecaBot integration spec. Every message is
 // { type, room:"baseca-wheel", payload, ts }. We receive type "wheel" and may
-// send "announce" / "result".
+// send "announce" / "result". Inbound commands carry a `channel` (primary or a
+// temporary guest channel); we echo it back on outbound messages so the bot
+// replies in the originating chat.
 //
 // SECURITY NOTE: the hub secret is stored in localStorage in plaintext — this
 // is a local streamer tool talking to the user's own bot, so that's acceptable,
@@ -65,6 +67,9 @@ let ws              = null;
 let wsWantConnected = false; // user intends to be connected (drives auto-reconnect)
 let wsReconnectId   = null;
 let wsBackoff       = 1000;
+// The channel of the most recent inbound command (primary OR a guest channel).
+// Echoed back on every announce/result so the bot replies in the right chat.
+let wsCurrentChannel = null;
 
 function wsBuildUrl() {
   const u = wsConfig.url.trim();
@@ -142,7 +147,10 @@ function wsDisconnect() {
 
 function wsSend(type, payload) {
   if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type, room: WS_ROOM, payload, ts: Date.now() }));
+    // Echo the channel of the driving command so the bot replies in the right
+    // chat (guest or primary). Omitting it lets the bot fall back to primary.
+    const p = wsCurrentChannel ? { ...payload, channel: wsCurrentChannel } : payload;
+    ws.send(JSON.stringify({ type, room: WS_ROOM, payload: p, ts: Date.now() }));
   }
 }
 
@@ -170,6 +178,11 @@ function wsHandleWheel(p) {
   const text       = typeof p.text === "string" ? p.text : "";
   const user       = typeof p.user === "string" ? p.user : "";
   const permission = Number(p.permission) || 0; // unknown/other → treat as lowest
+
+  // Remember where this command came from so responses (including rejection
+  // announces below) reply in the correct chat. Only one guest is active at a
+  // time, so "the most recent command's channel" is the correct target.
+  if (typeof p.channel === "string" && p.channel) wsCurrentChannel = p.channel;
 
   const permSrc = WS_PERM_SOURCE[command];
   if (permSrc === undefined) return;              // unknown command
