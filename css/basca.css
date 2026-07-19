@@ -1030,7 +1030,7 @@ canvas {
 .settings-overlay.hidden { display: none; }
 
 .settings-panel {
-  width: min(700px, 96vw);
+  width: min(1040px, 96vw); /* fits the 3-column body */
   height: 85vh;
   background: rgba(15,23,42,0.98);
   border: 1px solid rgba(255,255,255,0.1);
@@ -1131,9 +1131,16 @@ canvas {
   overflow-y: auto;
   padding: 16px 20px;
   display: grid;
-  grid-template-columns: 210px 1fr;
+  /* 3 columns: toggles | chances | sounds+images (widest, takes the slack) */
+  grid-template-columns: 200px 200px minmax(0, 1fr);
   gap: 24px;
   align-items: start;
+}
+/* Medium widths: drop to two columns and let sounds/images span the row below.
+   (The ≤640px rule further down collapses everything to a single column.) */
+@media (max-width: 900px) {
+  .settings-panel-body { grid-template-columns: 200px minmax(0, 1fr); }
+  .settings-panel-body > .settings-col:last-child { grid-column: 1 / -1; }
 }
 
 .settings-section { display: flex; flex-direction: column; gap: 12px; }
@@ -1251,8 +1258,7 @@ canvas {
   flex-shrink: 0;
 }
 .img-add-btn:hover { background: rgba(34,197,94,0.38); transform: none; }
-.settings-left-col  { display: flex; flex-direction: column; gap: 16px; }
-.settings-right-col { display: flex; flex-direction: column; gap: 16px; }
+.settings-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .snd-row {
   display: grid;
   grid-template-columns: 100px 1fr;

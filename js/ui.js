@@ -545,13 +545,34 @@ function openMischiefSettings(wheelId) {
   requestAnimationFrame(updateSettingsFades);
 }
 
+// Post-spin action radio groups. Each is a mutually-exclusive choice still
+// backed by the original boolean settings keys — "Do Nothing" just means every
+// key in that group is false (also the default), so saved wheels and the spin
+// logic in spin.js keep working unchanged.
+const POST_SPIN_GROUPS = [
+  { noneId: "losersNone", keys: ["autoIncrementLosers"] },
+  { noneId: "winnerNone", keys: ["autoRemoveWinner", "autoDecrementWinner", "setWinnerToOne"] },
+];
+const POST_SPIN_KEYS = POST_SPIN_GROUPS.flatMap(g => g.keys);
+
 function applySettingsToInputs() {
   Object.keys(SETTINGS_DEFAULTS).forEach(k => {
     if (k === "customImages" || k === "customSounds" || k === "botAutoConnect") return;
+    if (POST_SPIN_KEYS.includes(k)) return; // radio groups, handled below
     const el = document.getElementById(k);
     if (!el) return; // e.g. reducedEffects lives in the global menu, not here
     if (el.type === "checkbox") el.checked = !!editSettings[k];
     else                        el.value   = editSettings[k];
+  });
+  // Post-spin groups: select the active action, or "Do Nothing" if none are set.
+  POST_SPIN_GROUPS.forEach(g => {
+    let chosen = false;
+    g.keys.forEach(k => {
+      const on = !!editSettings[k];
+      document.getElementById(k).checked = on;
+      if (on) chosen = true;
+    });
+    document.getElementById(g.noneId).checked = !chosen;
   });
   // BasecaBot connection mode is a two-radio (mutually exclusive) setting.
   document.getElementById("botAutoConnect").checked    = !!editSettings.botAutoConnect;
@@ -595,32 +616,41 @@ document.getElementById("settingsBtn").onclick = () => {
 };
 dismissOnBackdrop(globalSettingsOverlay, () => globalSettingsOverlay.classList.add("hidden"));
 
-// PITFALL — SETTINGS_DEFAULTS includes customImages, customSounds, and the
-// boolean feature flags. Guard against null.addEventListener() for the
-// object-valued keys, and read .checked (not .value) for checkboxes.
-const WINNER_ACTION_KEYS = ["autoRemoveWinner", "autoDecrementWinner", "setWinnerToOne"];
+// PITFALL — SETTINGS_DEFAULTS includes customImages, customSounds, the
+// BasecaBot mode, and the post-spin radio groups. Guard against
+// null.addEventListener() for the object-valued keys, and read .checked
+// (not .value) for checkboxes.
 Object.keys(SETTINGS_DEFAULTS).forEach(k => {
   if (k === "customImages" || k === "customSounds" || k === "botAutoConnect") return;
+  if (POST_SPIN_KEYS.includes(k)) return; // radio groups, wired below
   const el = document.getElementById(k);
   if (!el) return; // key with no matching mischief input (none currently)
   el.addEventListener("input", () => {
     editSettings[k] = el.type === "checkbox"
       ? el.checked
       : Math.max(0, parseInt(el.value) || 0);
-    // The three winner-action flags are mutually exclusive: turning one on
-    // automatically turns the other two off.
-    if (WINNER_ACTION_KEYS.includes(k) && el.checked) {
-      WINNER_ACTION_KEYS.forEach(other => {
-        if (other !== k) {
-          editSettings[other] = false;
-          document.getElementById(other).checked = false;
-        }
-      });
-    }
     // Hide/Show Percentages changes the slice labels — rebuild the cached face
     // so the running idle/spin draw picks it up (only if editing the live wheel).
     if (k === "hidePercentages" && editingActive()) { renderWheelCache(); drawWheel(); }
     persistEditSettings();
+  });
+});
+
+// Post-spin action groups: selecting a radio sets that key true and every other
+// key in the group false; "Do Nothing" clears them all. The browser handles the
+// visual exclusivity via the shared radio `name`.
+POST_SPIN_GROUPS.forEach(g => {
+  const choose = selectedKey => {
+    g.keys.forEach(k => { editSettings[k] = (k === selectedKey); });
+    persistEditSettings();
+  };
+  document.getElementById(g.noneId).addEventListener("change", e => {
+    if (e.target.checked) choose(null);
+  });
+  g.keys.forEach(k => {
+    document.getElementById(k).addEventListener("change", e => {
+      if (e.target.checked) choose(k);
+    });
   });
 });
 

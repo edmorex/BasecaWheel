@@ -154,7 +154,32 @@
     <div class="settings-body-wrap">
       <div class="scroll-fade top"    id="settingsTopFade">   <div class="scroll-indicator">▲</div></div>
       <div class="settings-panel-body" id="settingsPanelBody">
-        <div class="settings-left-col">
+        <div class="settings-col">
+          <section class="settings-section">
+            <div class="settings-section-title">Wheel Features</div>
+            <label class="feature-label"><input type="checkbox" id="keepWinnersLog"       /> Keep Winners Log</label>
+            <label class="feature-label"><input type="checkbox" id="hidePercentages"      /> Hide Percentages</label>
+            <label class="feature-label"><input type="checkbox" id="idleTicks"            /> Idle Ticks</label>
+          </section>
+          <section class="settings-section">
+            <div class="settings-section-title">Losers Action</div>
+            <label class="feature-label"><input type="radio" name="loserAction" id="losersNone"          /> Do Nothing</label>
+            <label class="feature-label"><input type="radio" name="loserAction" id="autoIncrementLosers" /> Auto Increment Losers</label>
+          </section>
+          <section class="settings-section">
+            <div class="settings-section-title">Winner Action</div>
+            <label class="feature-label"><input type="radio" name="winnerAction" id="winnerNone"          /> Do Nothing</label>
+            <label class="feature-label"><input type="radio" name="winnerAction" id="autoRemoveWinner"    /> Auto Remove Winner</label>
+            <label class="feature-label"><input type="radio" name="winnerAction" id="autoDecrementWinner" /> Auto Decrement Winner</label>
+            <label class="feature-label"><input type="radio" name="winnerAction" id="setWinnerToOne"      /> Set Winner to 1</label>
+          </section>
+          <section class="settings-section">
+            <div class="settings-section-title">BasecaBot</div>
+            <label class="feature-label"><input type="radio" name="botConnMode" id="botAutoDisconnect" /> Auto Disconnect</label>
+            <label class="feature-label"><input type="radio" name="botConnMode" id="botAutoConnect"    /> Auto Connect</label>
+          </section>
+        </div>
+        <div class="settings-col">
           <section class="settings-section">
             <div class="settings-section-title">Chances</div>
             <label><span class="label-text"><img src="icons/timer.svg"      class="label-icon" alt="">Spin Time</span>      <input type="range"  id="spinTime"      min="0" max="100" step="1" /></label>
@@ -164,23 +189,8 @@
             <label><span class="label-text"><img src="icons/rabbit.svg"     class="label-icon" alt="">Boost %</span>        <input type="number" id="speedChance"   min="0" max="100" step="1" /></label>
             <label><span class="label-text"><img src="icons/shuffle.svg"    class="label-icon" alt="">Late Shuffle %</span> <input type="number" id="swapChance"    min="0" max="100" step="1" /></label>
           </section>
-          <section class="settings-section">
-            <div class="settings-section-title">Features</div>
-            <label class="feature-label"><input type="checkbox" id="keepWinnersLog"       /> Keep Winners Log</label>
-            <label class="feature-label"><input type="checkbox" id="hidePercentages"      /> Hide Percentages</label>
-            <label class="feature-label"><input type="checkbox" id="idleTicks"            /> Idle Ticks</label>
-            <label class="feature-label"><input type="checkbox" id="autoIncrementLosers" /> Auto Increment Losers</label>
-            <label class="feature-label"><input type="checkbox" id="autoRemoveWinner"    /> Auto Remove Winner</label>
-            <label class="feature-label"><input type="checkbox" id="autoDecrementWinner" /> Auto Decrement Winner</label>
-            <label class="feature-label"><input type="checkbox" id="setWinnerToOne"      /> Set Winner to 1</label>
-          </section>
-          <section class="settings-section">
-            <div class="settings-section-title">BasecaBot</div>
-            <label class="feature-label"><input type="radio" name="botConnMode" id="botAutoDisconnect" /> Auto Disconnect</label>
-            <label class="feature-label"><input type="radio" name="botConnMode" id="botAutoConnect"    /> Auto Connect</label>
-          </section>
         </div>
-        <div class="settings-right-col">
+        <div class="settings-col">
           <section class="settings-section">
             <div class="settings-section-title"><img src="icons/volume-2.svg" class="label-icon" alt=""> Wheel Sounds</div>
             <div id="sndSettingsContainer"></div>
